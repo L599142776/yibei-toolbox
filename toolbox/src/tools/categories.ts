@@ -67,4 +67,11 @@ export const categories: Category[] = [
     description: 'CSS 生成器、布局工具、颜色工具',
     color: '#14b8a6',
   },
+  {
+    id: 'gis',
+    name: 'GIS 地图',
+    icon: 'Map',
+    description: '地图文件解析、空间计算、坐标转换等 GIS 工具',
+    color: '#059669',
+  },
 ]
