@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Polyline, Marker, Popup, useMapEvents } from 'react-leaflet'
 import * as turf from '@turf/turf'
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import TileLayerSelector from './TileLayerSelector'
+import { OSM_TILE_URL } from './tianditu'
+import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
 
 type Point = [number, number] // [lng, lat]
@@ -18,6 +21,15 @@ export default function DistanceCalculator() {
   const [inputA, setInputA] = useState('')
   const [inputB, setInputB] = useState('')
 
+  const [tileUrl, setTileUrl] = useState(OSM_TILE_URL)
+  const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
+  const [tileAttribution, setTileAttribution] = useState('')
+
+  const handleTileConfig = useCallback((cfg: { url: string; subdomains: string[]; attribution: string; config: TiandituConfig }) => {
+    setTileUrl(cfg.url)
+    setTileSubdomains(cfg.subdomains)
+    setTileAttribution(cfg.attribution)
+  }, [])
 
   const handleMapClick = (e: LeafletMouseEvent) => {
     if (mode !== 'map') return
@@ -36,7 +48,6 @@ export default function DistanceCalculator() {
     const bearing = turf.bearing(from, to)
     const mid = turf.midpoint(from, to)
 
-    // If more than 2 points, calculate path segments
     const segments: { km: number; bearing: number }[] = []
     if (points.length > 2) {
       for (let i = 0; i < points.length - 1; i++) {
@@ -78,6 +89,9 @@ export default function DistanceCalculator() {
 
   return (
     <ToolLayout title="距离与方位计算" description="计算两点之间的大圆距离、方位角和中点">
+      {/* 底图选择器 */}
+      <TileLayerSelector onConfigChange={handleTileConfig} />
+
       <div className="btn-group">
         <button className={`btn ${mode === 'map' ? '' : 'btn-outline'}`} onClick={() => setMode('map')}>🗺️ 地图选点</button>
         <button className={`btn ${mode === 'input' ? '' : 'btn-outline'}`} onClick={() => setMode('input')}>📝 坐标输入</button>
@@ -103,7 +117,7 @@ export default function DistanceCalculator() {
       {/* Map */}
       <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)', height: 400, marginBottom: 16 }}>
         <MapContainer center={center} zoom={points.length > 0 ? 6 : 4} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-          <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution={tileAttribution} url={tileUrl} subdomains={tileSubdomains} />
           <MapClickHandler onClick={handleMapClick} />
           {latLngs.length >= 2 && <Polyline positions={latLngs} color="#ef4444" weight={3} />}
           {latLngs.map((ll, i) => (

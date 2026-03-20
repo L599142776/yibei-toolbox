@@ -1,9 +1,12 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Polygon as LeafletPolygon, Polyline, useMapEvents } from 'react-leaflet'
 import * as turf from '@turf/turf'
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet'
 import L from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import TileLayerSelector from './TileLayerSelector'
+import { OSM_TILE_URL } from './tianditu'
+import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
 
 type Point = [number, number] // [lng, lat]
@@ -13,32 +16,22 @@ function MapClickHandler({ onClick }: { onClick: (e: LeafletMouseEvent) => void 
   return null
 }
 
-function MapBoundsFitter({ polygons }: { polygons: Point[][] }) {
-  const map = L.map(document.createElement('div'))
-  // We'll use a different approach - pass the map from MapContainer
-  return null
-}
-
 // WKT 解析器：支持 POLYGON / MULTIPOLYGON
 function parseWKT(wkt: string): { rings: Point[][]; error?: string } {
   const text = wkt.trim().toUpperCase()
 
-  // POLYGON ((lng lat, lng lat, ...), (hole...))
   const polygonMatch = text.match(/^POLYGON\s*\(\s*(.+)\s*\)$/s)
   if (polygonMatch) {
     return parseWKTRings(polygonMatch[1])
   }
 
-  // MULTIPOLYGON (((lng lat, ...)), ((...)))
   const multiMatch = text.match(/^MULTIPOLYGON\s*\(\s*(.+)\s*\)$/s)
   if (multiMatch) {
     return parseMultiWKTRings(multiMatch[1])
   }
 
-  // GEOMETRYCOLLECTION
   const gcMatch = text.match(/^GEOMETRYCOLLECTION\s*\(\s*(.+)\s*\)$/s)
   if (gcMatch) {
-    // Extract all POLYGONs from the collection
     const polygonStrs = gcMatch[1].match(/POLYGON\s*\(\s*\([^)]+\)\s*\)/g)
     if (polygonStrs) {
       const allRings: Point[][] = []
@@ -59,7 +52,6 @@ function parseWKT(wkt: string): { rings: Point[][]; error?: string } {
 
 function parseWKTRings(ringStr: string): { rings: Point[][]; error?: string } {
   const rings: Point[][] = []
-  // Split by ), ( for multiple rings (outer + holes)
   const parts = ringStr.split(/\)\s*,\s*\(/)
   for (const part of parts) {
     const cleaned = part.replace(/[()]/g, '').trim()
@@ -78,7 +70,6 @@ function parseWKTRings(ringStr: string): { rings: Point[][]; error?: string } {
 
 function parseMultiWKTRings(str: string): { rings: Point[][]; error?: string } {
   const allRings: Point[][] = []
-  // Match each ((...)) group
   const groups = str.match(/\(\s*\([^)]+\)\s*\)/g)
   if (!groups) return { rings: [], error: 'MULTIPOLYGON 格式错误' }
   for (const group of groups) {
@@ -101,6 +92,16 @@ export default function AreaCalculator() {
   const [inputText, setInputText] = useState('')
   const [wktText, setWktText] = useState('')
   const [wktError, setWktError] = useState('')
+
+  const [tileUrl, setTileUrl] = useState(OSM_TILE_URL)
+  const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
+  const [tileAttribution, setTileAttribution] = useState('')
+
+  const handleTileConfig = useCallback((cfg: { url: string; subdomains: string[]; attribution: string; config: TiandituConfig }) => {
+    setTileUrl(cfg.url)
+    setTileSubdomains(cfg.subdomains)
+    setTileAttribution(cfg.attribution)
+  }, [])
 
   const handleMapClick = (e: LeafletMouseEvent) => {
     if (mode !== 'draw') return
@@ -134,13 +135,12 @@ export default function AreaCalculator() {
       return
     }
     setWktRings(result.rings)
-    setPoints(result.rings[0]) // Also set points for legacy display
+    setPoints(result.rings[0])
   }
 
   const undoLast = () => setPoints(prev => prev.slice(0, -1))
   const clearAll = () => { setPoints([]); setWktRings([]); setInputText(''); setWktText(''); setWktError('') }
 
-  // Compute results for all polygons
   const allResults = useMemo(() => {
     const rings = wktRings.length > 0 ? wktRings : (points.length >= 3 ? [points] : [])
     if (rings.length === 0) return null
@@ -191,6 +191,9 @@ export default function AreaCalculator() {
 
   return (
     <ToolLayout title="多边形面积计算" description="地图绘制 / 坐标输入 / WKT 导入，实时计算面积和周长">
+      {/* 底图选择器 */}
+      <TileLayerSelector onConfigChange={handleTileConfig} />
+
       <div className="btn-group">
         <button className={`btn ${mode === 'draw' ? '' : 'btn-outline'}`} onClick={() => setMode('draw')}>🖊️ 地图绘制</button>
         <button className={`btn ${mode === 'coord' ? '' : 'btn-outline'}`} onClick={() => setMode('coord')}>📝 坐标输入</button>
@@ -235,7 +238,7 @@ export default function AreaCalculator() {
       {/* Map */}
       <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)', height: 450, marginBottom: 16 }}>
         <MapContainer center={center} zoom={12} style={{ height: '100%', width: '100%' }} scrollWheelZoom key={JSON.stringify(center)}>
-          <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution={tileAttribution} url={tileUrl} subdomains={tileSubdomains} />
           <MapClickHandler onClick={handleMapClick} />
           {allLatLngs.map((latLngs, idx) => (
             <div key={idx}>
@@ -271,7 +274,6 @@ export default function AreaCalculator() {
       {/* Results */}
       {allResults && (
         <>
-          {/* Total */}
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12, marginBottom: 16,
           }}>
@@ -291,7 +293,6 @@ export default function AreaCalculator() {
             ))}
           </div>
 
-          {/* Per-polygon details for MULTIPOLYGON */}
           {allResults.details.length > 1 && (
             <div style={{ background: 'var(--bg-input)', borderRadius: 8, padding: '16px' }}>
               <div className="tool-label" style={{ marginBottom: 8 }}>各多边形明细</div>

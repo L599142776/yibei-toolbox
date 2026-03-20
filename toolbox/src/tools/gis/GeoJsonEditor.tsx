@@ -4,6 +4,9 @@ import * as turf from '@turf/turf'
 import type { FeatureCollection, Feature, Geometry, Polygon, MultiPolygon, LineString, MultiLineString } from 'geojson'
 import type { PathOptions } from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import TileLayerSelector from './TileLayerSelector'
+import { OSM_TILE_URL } from './tianditu'
+import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
 
 const SAMPLE: FeatureCollection = {
@@ -42,6 +45,16 @@ export default function GeoJsonEditor() {
   const [stats, setStats] = useState<string[]>([])
   const [format, setFormat] = useState<'pretty' | 'compact'>('pretty')
 
+  const [tileUrl, setTileUrl] = useState(OSM_TILE_URL)
+  const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
+  const [tileAttribution, setTileAttribution] = useState('')
+
+  const handleTileConfig = useCallback((cfg: { url: string; subdomains: string[]; attribution: string; config: TiandituConfig }) => {
+    setTileUrl(cfg.url)
+    setTileSubdomains(cfg.subdomains)
+    setTileAttribution(cfg.attribution)
+  }, [])
+
   const analyze = useCallback((data: FeatureCollection): string[] => {
     const s: string[] = []
     s.push(`要素总数: ${data.features.length}`)
@@ -53,18 +66,15 @@ export default function GeoJsonEditor() {
     })
     Object.entries(typeCount).forEach(([t, c]) => s.push(`  ${t}: ${c}`))
 
-    // Properties analysis
     const allProps = new Set<string>()
     data.features.forEach(f => Object.keys(f.properties || {}).forEach(k => allProps.add(k)))
     if (allProps.size > 0) s.push(`属性字段: ${[...allProps].join(', ')}`)
 
-    // Bounding box
     try {
       const bbox = turf.bbox(data)
       s.push(`范围: [${bbox.map(v => v.toFixed(4)).join(', ')}]`)
     } catch { /* ignore */ }
 
-    // Total area for polygons
     try {
       const polygons = data.features.filter(f => f.geometry?.type === 'Polygon' || f.geometry?.type === 'MultiPolygon')
       if (polygons.length > 0) {
@@ -74,7 +84,6 @@ export default function GeoJsonEditor() {
       }
     } catch { /* ignore */ }
 
-    // Total length for lines
     try {
       const lines = data.features.filter(f => f.geometry?.type === 'LineString' || f.geometry?.type === 'MultiLineString')
       if (lines.length > 0) {
@@ -121,7 +130,6 @@ export default function GeoJsonEditor() {
     try {
       const parsed = JSON.parse(input)
       const data = parsed.type === 'FeatureCollection' ? parsed : { type: 'FeatureCollection', features: [parsed] }
-      // Check each feature geometry validity
       let issues = 0
       data.features.forEach((f: { geometry?: Geometry }, i: number) => {
         if (!f.geometry) { console.warn(`Feature ${i}: missing geometry`); issues++ }
@@ -170,6 +178,9 @@ export default function GeoJsonEditor() {
 
   return (
     <ToolLayout title="GeoJSON 编辑器" description="编辑、验证、分析 GeoJSON 数据，实时地图预览">
+      {/* 底图选择器 */}
+      <TileLayerSelector onConfigChange={handleTileConfig} />
+
       <div className="btn-group">
         <button className="btn" onClick={handleParse}>🔍 解析</button>
         <button className="btn btn-outline" onClick={handleValidate}>✅ 验证</button>
@@ -199,7 +210,7 @@ export default function GeoJsonEditor() {
           <div className="tool-label">地图预览</div>
           <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)', height: 380 }}>
             <MapContainer center={[39.9, 116.4]} zoom={8} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-              <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <TileLayer attribution={tileAttribution} url={tileUrl} subdomains={tileSubdomains} />
               {geoData && <GeoJSON data={geoData} style={geoStyle} />}
             </MapContainer>
           </div>

@@ -1,8 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Rectangle, Polygon as LeafletPolygon, useMapEvents } from 'react-leaflet'
 import * as turf from '@turf/turf'
 import type { LatLngExpression, LeafletMouseEvent, LatLngBoundsLiteral } from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import TileLayerSelector from './TileLayerSelector'
+import { OSM_TILE_URL } from './tianditu'
+import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
 
 type Point = [number, number]
@@ -17,6 +20,16 @@ export default function BoundingBox() {
   const [manualInput, setManualInput] = useState('')
   const [mode, setMode] = useState<'map' | 'input'>('map')
 
+  const [tileUrl, setTileUrl] = useState(OSM_TILE_URL)
+  const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
+  const [tileAttribution, setTileAttribution] = useState('')
+
+  const handleTileConfig = useCallback((cfg: { url: string; subdomains: string[]; attribution: string; config: TiandituConfig }) => {
+    setTileUrl(cfg.url)
+    setTileSubdomains(cfg.subdomains)
+    setTileAttribution(cfg.attribution)
+  }, [])
+
   const handleMapClick = (e: LeafletMouseEvent) => {
     if (mode !== 'map') return
     setPoints(prev => {
@@ -29,10 +42,9 @@ export default function BoundingBox() {
     try {
       const parts = manualInput.trim().split(/[,\s\t]+/).map(Number)
       if (parts.length === 4 && parts.every(v => !isNaN(v))) {
-        // bbox format: minLng, minLat, maxLng, maxLat
         setPoints([
-          [parts[0], parts[1]], // SW
-          [parts[2], parts[3]], // NE
+          [parts[0], parts[1]],
+          [parts[2], parts[3]],
         ])
       } else {
         alert('请输入 bbox 格式：minLng,minLat,maxLng,maxLat')
@@ -82,6 +94,9 @@ export default function BoundingBox() {
 
   return (
     <ToolLayout title="边界框工具" description="生成和可视化地理边界框 (Bounding Box)，支持多种格式输出">
+      {/* 底图选择器 */}
+      <TileLayerSelector onConfigChange={handleTileConfig} />
+
       <div className="btn-group">
         <button className={`btn ${mode === 'map' ? '' : 'btn-outline'}`} onClick={() => setMode('map')}>🗺️ 地图选点</button>
         <button className={`btn ${mode === 'input' ? '' : 'btn-outline'}`} onClick={() => setMode('input')}>📝 输入 bbox</button>
@@ -104,7 +119,7 @@ export default function BoundingBox() {
       {/* Map */}
       <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)', height: 400, marginBottom: 16 }}>
         <MapContainer center={center} zoom={bbox ? 8 : 4} style={{ height: '100%', width: '100%' }} scrollWheelZoom>
-          <TileLayer attribution='&copy; OSM' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <TileLayer attribution={tileAttribution} url={tileUrl} subdomains={tileSubdomains} />
           <MapClickHandler onClick={handleMapClick} />
           {bounds && (
             <>

@@ -3,6 +3,9 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet'
 import type { FeatureCollection, GeoJsonObject } from 'geojson'
 import type { PathOptions } from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import TileLayerSelector from './TileLayerSelector'
+import { OSM_TILE_URL } from './tianditu'
+import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
 
 // Fix leaflet default icon issue with bundlers
@@ -35,6 +38,16 @@ export default function MapViewer() {
   const [layers, setLayers] = useState<{ name: string; data: FeatureCollection; color: string }[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const [tileUrl, setTileUrl] = useState(OSM_TILE_URL)
+  const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
+  const [tileAttribution, setTileAttribution] = useState('')
+
+  const handleTileConfig = useCallback((cfg: { url: string; subdomains: string[]; attribution: string; config: TiandituConfig }) => {
+    setTileUrl(cfg.url)
+    setTileSubdomains(cfg.subdomains)
+    setTileAttribution(cfg.attribution)
+  }, [])
+
   const geoStyle = (layerIndex: number): PathOptions => ({
     color: COLORS[layerIndex % COLORS.length],
     weight: 2,
@@ -55,13 +68,11 @@ export default function MapViewer() {
         const parsed = JSON.parse(text)
         data = parsed.type === 'FeatureCollection' ? parsed : { type: 'FeatureCollection', features: [{ type: 'Feature', geometry: parsed, properties: {} }] }
       } else if (ext === 'zip' || ext === 'shp') {
-        // Shapefile: need shpjs
         const shp = (await import('shpjs')).default
         const buf = await file.arrayBuffer()
         const result = await shp(buf)
         data = result as FeatureCollection
       } else if (ext === 'kml' || ext === 'gpx') {
-        // Parse KML/GPX via toGeoJSON (inline minimal parser)
         const text = await file.text()
         const parser = new DOMParser()
         const doc = parser.parseFromString(text, 'text/xml')
@@ -125,7 +136,6 @@ export default function MapViewer() {
     const placemarks = doc.querySelectorAll('Placemark')
     placemarks.forEach(pm => {
       const name = pm.querySelector('name')?.textContent || ''
-      // Polygon
       const outer = pm.querySelector('outerBoundaryIs LinearRing coordinates')
       if (outer) {
         const coords = outer.textContent?.trim().split(/\s+/).map(c => {
@@ -134,7 +144,6 @@ export default function MapViewer() {
         }) || []
         if (coords.length > 0) features.push({ type: 'Feature', properties: { name }, geometry: { type: 'Polygon', coordinates: [[...coords, coords[0]]] } })
       }
-      // LineString
       const line = pm.querySelector('LineString coordinates')
       if (line) {
         const coords = line.textContent?.trim().split(/\s+/).map(c => {
@@ -143,7 +152,6 @@ export default function MapViewer() {
         }) || []
         features.push({ type: 'Feature', properties: { name }, geometry: { type: 'LineString', coordinates: coords } })
       }
-      // Point
       const point = pm.querySelector('Point coordinates')
       if (point) {
         const [lng, lat] = point.textContent?.trim().split(',').map(Number) || [0, 0]
@@ -184,6 +192,9 @@ export default function MapViewer() {
 
   return (
     <ToolLayout title="地图文件解析与展示" description="在线解析 Shapefile / GeoJSON / KML / GPX 文件，可视化地图数据">
+      {/* 底图选择器 */}
+      <TileLayerSelector onConfigChange={handleTileConfig} />
+
       {/* Upload area */}
       <div
         onDrop={handleDrop}
@@ -263,8 +274,9 @@ export default function MapViewer() {
       <div style={{ borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)', height: 500 }}>
         <MapContainer center={[35, 105]} zoom={4} style={{ height: '100%', width: '100%', background: '#1a1a2e' }} scrollWheelZoom>
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution={tileAttribution}
+            url={tileUrl}
+            subdomains={tileSubdomains}
           />
           {allData && (
             <>
