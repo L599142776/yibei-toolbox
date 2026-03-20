@@ -6,8 +6,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:electron": "vite",
+    "dev": "vite --host",
+    "dev:electron": "ELECTRON_DEV=true vite",
     "build": "tsc -b && vite build",
     "build:electron": "tsc -b && vite build && electron-builder",
     "build:win": "tsc -b && vite build && electron-builder --win",
