@@ -1,6 +1,7 @@
 // src/App.tsx
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { Suspense } from 'react'
+import { Router } from './utils/router'
 import { FavoritesProvider } from './contexts/FavoritesContext'
 import SearchBar from './components/SearchBar'
 import Home from './pages/Home'
@@ -11,7 +12,7 @@ import './App.css'
 function App() {
   return (
     <FavoritesProvider>
-      <BrowserRouter>
+      <Router>
         <div className="app">
           <header className="header">
             <div className="header-inner">
@@ -40,7 +41,7 @@ function App() {
             <p>艺北工具箱 · 纯前端 · 无需后端 · 所有数据本地处理</p>
           </footer>
         </div>
-      </BrowserRouter>
+      </Router>
     </FavoritesProvider>
   )
 }
