@@ -295,6 +295,182 @@ const toolModules: ToolManifest[] = [
     path: '/code/html-markdown',
     component: lazy(() => import('./code/HtmlMarkdown')),
   },
+
+  // ── 常用工具（新增） ──
+  {
+    id: 'lorem-ipsum',
+    name: 'Lorem Ipsum 生成器',
+    description: '生成占位文本，支持英文和中文',
+    category: 'common',
+    icon: 'AlignJustify',
+    keywords: ['lorem', '占位', '假文', 'dummy text'],
+    path: '/common/lorem-ipsum',
+    component: lazy(() => import('./common/LoremIpsum')),
+  },
+
+  // ── 文本处理（新增） ──
+  {
+    id: 'text-dedup',
+    name: '文本去重',
+    description: '按行、按词、按字符去除重复内容',
+    category: 'text',
+    icon: 'CopyMinus',
+    keywords: ['去重', '重复', 'dedup', 'unique'],
+    path: '/text/text-dedup',
+    component: lazy(() => import('./text/TextDedup')),
+  },
+  {
+    id: 'text-sort',
+    name: '文本排序',
+    description: '按行排序，支持升序/降序、数字/文本模式',
+    category: 'text',
+    icon: 'ArrowDownUp',
+    keywords: ['排序', 'sort', '升序', '降序'],
+    path: '/text/text-sort',
+    component: lazy(() => import('./text/TextSort')),
+  },
+  {
+    id: 'text-diff',
+    name: '文本 Diff 对比',
+    description: '逐行对比两段文本的差异',
+    category: 'text',
+    icon: 'GitCompare',
+    keywords: ['diff', '对比', '比较', 'compare'],
+    path: '/text/text-diff',
+    component: lazy(() => import('./text/TextDiff')),
+  },
+
+  // ── 编码加密（新增） ──
+  {
+    id: 'hmac-generator',
+    name: 'HMAC 生成器',
+    description: '使用密钥计算 HMAC 哈希值',
+    category: 'crypto',
+    icon: 'KeySquare',
+    keywords: ['hmac', '密钥', '签名'],
+    path: '/crypto/hmac-generator',
+    component: lazy(() => import('./crypto/HmacGenerator')),
+  },
+  {
+    id: 'html-entity',
+    name: 'HTML 实体编解码',
+    description: 'HTML 特殊字符实体编码与解码',
+    category: 'crypto',
+    icon: 'Brackets',
+    keywords: ['html', 'entity', '实体', '转义'],
+    path: '/crypto/html-entity',
+    component: lazy(() => import('./crypto/HtmlEntity')),
+  },
+
+  // ── 数据格式（新增） ──
+  {
+    id: 'sql-formatter',
+    name: 'SQL 格式化',
+    description: 'SQL 语句美化与格式化',
+    category: 'data',
+    icon: 'Database',
+    keywords: ['sql', '格式化', '美化', 'database'],
+    path: '/data/sql-formatter',
+    component: lazy(() => import('./data/SqlFormatter')),
+  },
+
+  // ── 时间日期（新增） ──
+  {
+    id: 'timezone',
+    name: '时区转换',
+    description: '在不同时区之间转换时间',
+    category: 'datetime',
+    icon: 'Globe',
+    keywords: ['时区', 'timezone', '转换'],
+    path: '/datetime/timezone',
+    component: lazy(() => import('./datetime/Timezone')),
+  },
+  {
+    id: 'workday-calc',
+    name: '工作日计算',
+    description: '计算日期间工作日数，或加减工作日',
+    category: 'datetime',
+    icon: 'Briefcase',
+    keywords: ['工作日', 'workday', '上班'],
+    path: '/datetime/workday-calc',
+    component: lazy(() => import('./datetime/WorkdayCalc')),
+  },
+
+  // ── 网络工具（新增） ──
+  {
+    id: 'http-tester',
+    name: 'HTTP 请求测试',
+    description: 'API 接口调试工具，支持多种请求方法',
+    category: 'network',
+    icon: 'Send',
+    keywords: ['http', 'api', '请求', '接口'],
+    path: '/network/http-tester',
+    component: lazy(() => import('./network/HttpTester')),
+  },
+  {
+    id: 'dns-lookup',
+    name: 'DNS 查询',
+    description: '通过 DNS over HTTPS 查询域名解析记录',
+    category: 'network',
+    icon: 'Server',
+    keywords: ['dns', '域名', '解析', 'lookup'],
+    path: '/network/dns-lookup',
+    component: lazy(() => import('./network/DnsLookup')),
+  },
+  {
+    id: 'url-parser',
+    name: 'URL 解析器',
+    description: '解析 URL 各组成部分和查询参数',
+    category: 'network',
+    icon: 'Link2',
+    keywords: ['url', '解析', '参数', 'query'],
+    path: '/network/url-parser',
+    component: lazy(() => import('./network/UrlParser')),
+  },
+
+  // ── 图像工具（新增） ──
+  {
+    id: 'image-crop',
+    name: '图片裁剪',
+    description: '上传图片，指定区域裁剪',
+    category: 'image',
+    icon: 'Crop',
+    keywords: ['裁剪', 'crop', '截图'],
+    path: '/image/image-crop',
+    component: lazy(() => import('./image/ImageCrop')),
+  },
+
+  // ── 前端开发（新增分类） ──
+  {
+    id: 'color-picker',
+    name: '颜色工具',
+    description: '颜色选择、格式转换、对比度检查',
+    category: 'frontend',
+    icon: 'Palette',
+    keywords: ['颜色', 'color', '对比度', 'picker'],
+    path: '/frontend/color-picker',
+    component: lazy(() => import('./frontend/ColorPicker')),
+  },
+  {
+    id: 'css-shadow',
+    name: 'CSS 阴影生成器',
+    description: '可视化生成 box-shadow 代码',
+    category: 'frontend',
+    icon: 'SquareShadow',
+    keywords: ['阴影', 'shadow', 'box-shadow'],
+    path: '/frontend/css-shadow',
+    component: lazy(() => import('./frontend/CssShadow')),
+  },
+  {
+    id: 'flexbox-playground',
+    name: 'Flexbox 布局生成器',
+    description: '可视化调整 Flexbox 属性，实时预览并生成代码',
+    category: 'frontend',
+    icon: 'LayoutGrid',
+    keywords: ['flexbox', '布局', 'flex', 'css'],
+    path: '/frontend/flexbox-playground',
+    component: lazy(() => import('./frontend/FlexboxPlayground')),
+  },
 ]
 
 // ============================================================

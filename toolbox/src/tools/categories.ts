@@ -60,4 +60,11 @@ export const categories: Category[] = [
     description: '代码格式化、转换、高亮工具',
     color: '#f97316',
   },
+  {
+    id: 'frontend',
+    name: '前端开发',
+    icon: 'Layout',
+    description: 'CSS 生成器、布局工具、颜色工具',
+    color: '#14b8a6',
+  },
 ]
