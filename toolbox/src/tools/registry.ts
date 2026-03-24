@@ -113,6 +113,16 @@ const toolModules: ToolManifest[] = [
     path: '/text/regex-tester',
     component: lazy(() => import('./text/RegexTester')),
   },
+  {
+    id: 'regex-cheatsheet',
+    name: '正则表达式速查表',
+    description: '常用正则表达式模板库，支持一键复制和在线测试',
+    category: 'text',
+    icon: 'BookMarked',
+    keywords: ['正则', 'regex', '速查', 'cheatsheet', '模式'],
+    path: '/text/regex-cheatsheet',
+    component: lazy(() => import('./text/RegexCheatsheet')),
+  },
 
   // ── 编码加密 ──
   {
@@ -148,12 +158,12 @@ const toolModules: ToolManifest[] = [
   {
     id: 'jwt-decoder',
     name: 'JWT 解析验证',
-    description: '解码和验证 JSON Web Token',
+    description: '解码和验证 JSON Web Token，支持过期时间检测和实时预览',
     category: 'crypto',
     icon: 'ShieldCheck',
     keywords: ['jwt', 'token', '验证'],
     path: '/crypto/jwt-decoder',
-    component: lazy(() => import('./crypto/JwtDecoder')),
+    component: lazy(() => import('./crypto/JwtDebugger')),
   },
   {
     id: 'hash-generator',
@@ -167,6 +177,16 @@ const toolModules: ToolManifest[] = [
   },
 
   // ── 数据格式 ──
+  {
+    id: 'json-viewer',
+    name: 'JSON 查看器',
+    description: '可视化树形结构查看 JSON，支持搜索和复制路径',
+    category: 'data',
+    icon: 'Braces',
+    keywords: ['json', 'tree', 'treeview', '查看器', '搜索'],
+    path: '/data/json-viewer',
+    component: lazy(() => import('./data/JsonViewer')),
+  },
   {
     id: 'json-formatter',
     name: 'JSON 格式化',
@@ -295,6 +315,27 @@ const toolModules: ToolManifest[] = [
     path: '/code/html-markdown',
     component: lazy(() => import('./code/HtmlMarkdown')),
   },
+  {
+    id: 'api-doc-generator',
+    name: 'API 文档生成器',
+    description: '根据 JSON Schema 或示例 JSON 生成 Markdown / OpenAPI / HTML 文档',
+    category: 'code',
+    icon: 'FileText',
+    keywords: ['api', '文档', 'openapi', 'swagger', 'markdown', 'html', 'json schema'],
+    path: '/code/api-doc-generator',
+    component: lazy(() => import('./code/ApiDocGenerator')),
+  },
+
+  {
+    id: 'id-card-lookup',
+    name: '身份证信息查询',
+    description: '输入身份证号码，解析户籍所在地、出生日期、性别、年龄、生肖等信息',
+    category: 'common',
+    icon: 'CreditCard',
+    keywords: ['身份证', 'idcard', '身份证查询', '身份信息'],
+    path: '/common/id-card-lookup',
+    component: lazy(() => import('./common/IdCardLookup')),
+  },
 
   // ── 常用工具（新增） ──
   {
@@ -306,6 +347,46 @@ const toolModules: ToolManifest[] = [
     keywords: ['lorem', '占位', '假文', 'dummy text'],
     path: '/common/lorem-ipsum',
     component: lazy(() => import('./common/LoremIpsum')),
+  },
+  {
+    id: 'random-data-generator',
+    name: '随机数据生成器',
+    description: '生成 Mock 测试数据，支持姓名、邮箱、手机号、地址等多种类型',
+    category: 'common',
+    icon: 'Shuffle',
+    keywords: ['随机', 'mock', '测试数据', '姓名', '邮箱', '手机号', 'random', 'data'],
+    path: '/common/random-data-generator',
+    component: lazy(() => import('./common/RandomDataGenerator')),
+  },
+  {
+    id: 'mobile-lookup',
+    name: '手机号归属地查询',
+    description: '查询手机号码的运营商、归属地、区号和邮编信息',
+    category: 'common',
+    icon: 'Smartphone',
+    keywords: ['手机号', '归属地', '运营商', '电话号码', 'mobile', 'phone'],
+    path: '/common/mobile-lookup',
+    component: lazy(() => import('./common/MobileLookup')),
+  },
+  {
+    id: 'bank-card-lookup',
+    name: '银行卡信息查询',
+    description: '输入银行卡号查询发卡行、卡类型和卡组织',
+    category: 'common',
+    icon: 'CreditCard',
+    keywords: ['银行卡', 'bin', 'bank', '信用卡', '储蓄卡', '银联', 'visa'],
+    path: '/common/bank-card-lookup',
+    component: lazy(() => import('./common/BankCardLookup')),
+  },
+  {
+    id: 'zh-converter',
+    name: '简繁转换',
+    description: '简体与繁体中文互转，支持常用词组和多音字处理',
+    category: 'common',
+    icon: 'Languages',
+    keywords: ['简体', '繁体', '转换', '中文', '简繁', '繁简'],
+    path: '/common/zh-converter',
+    component: lazy(() => import('./common/ZhConverter')),
   },
 
   // ── 文本处理（新增） ──
@@ -339,6 +420,26 @@ const toolModules: ToolManifest[] = [
     path: '/text/text-diff',
     component: lazy(() => import('./text/TextDiff')),
   },
+  {
+    id: 'markdown-preview',
+    name: 'Markdown 预览',
+    description: '实时 Markdown 编辑预览，支持语法高亮',
+    category: 'text',
+    icon: 'FileText',
+    keywords: ['markdown', 'md', '预览', 'preview', '编辑', '编辑器'],
+    path: '/text/markdown-preview',
+    component: lazy(() => import('./text/MarkdownPreview')),
+  },
+  {
+    id: 'symbols',
+    name: '特殊符号',
+    description: '常用符号大全，支持搜索和复制，包含希腊字母、数学、箭头等12个分类',
+    category: 'text',
+    icon: 'Star',
+    keywords: ['符号', '特殊符号', '希腊字母', '数学符号', '箭头', 'emoji', '标点', 'currency'],
+    path: '/text/symbols',
+    component: lazy(() => import('./text/Symbols')),
+  },
 
   // ── 编码加密（新增） ──
   {
@@ -352,6 +453,26 @@ const toolModules: ToolManifest[] = [
     component: lazy(() => import('./crypto/HmacGenerator')),
   },
   {
+    id: 'aes-rsa-tool',
+    name: 'AES/RSA 加解密',
+    description: 'AES 对称加密和 RSA 非对称加密，使用 Web Crypto API',
+    category: 'crypto',
+    icon: 'KeySquare',
+    keywords: ['aes', 'rsa', '加密', '解密', '对称', '非对称', 'encrypt', 'decrypt'],
+    path: '/crypto/aes-rsa-tool',
+    component: lazy(() => import('./crypto/AesRsaTool')),
+  },
+  {
+    id: 'password-strength',
+    name: '密码强度检测',
+    description: '检测密码安全等级并生成强密码',
+    category: 'crypto',
+    icon: 'Shield',
+    keywords: ['密码', '强度', '安全', 'password', 'strength'],
+    path: '/crypto/password-strength',
+    component: lazy(() => import('./crypto/PasswordStrength')),
+  },
+  {
     id: 'html-entity',
     name: 'HTML 实体编解码',
     description: 'HTML 特殊字符实体编码与解码',
@@ -363,6 +484,26 @@ const toolModules: ToolManifest[] = [
   },
 
   // ── 数据格式（新增） ──
+  {
+    id: 'xml-json-converter',
+    name: 'XML ↔ JSON',
+    description: 'XML 与 JSON 格式互转，支持属性和 CDATA',
+    category: 'data',
+    icon: 'FileCode',
+    keywords: ['xml', 'json', '转换', 'converter'],
+    path: '/data/xml-json-converter',
+    component: lazy(() => import('./data/XmlJsonConverter')),
+  },
+  {
+    id: 'csv-excel-converter',
+    name: 'CSV ↔ Excel',
+    description: 'CSV 与 Excel 文件互转，支持分隔符和编码设置',
+    category: 'data',
+    icon: 'Table',
+    keywords: ['csv', 'excel', 'xlsx', '转换', 'converter', '表格'],
+    path: '/data/csv-excel-converter',
+    component: lazy(() => import('./data/CsvExcelConverter')),
+  },
   {
     id: 'sql-formatter',
     name: 'SQL 格式化',
@@ -395,6 +536,16 @@ const toolModules: ToolManifest[] = [
     path: '/datetime/workday-calc',
     component: lazy(() => import('./datetime/WorkdayCalc')),
   },
+  {
+    id: 'cron-interpreter',
+    name: 'Cron 表达式解释器',
+    description: '解析 Cron 表达式含义，查看未来执行时间',
+    category: 'datetime',
+    icon: 'CalendarClock',
+    keywords: ['cron', '解释', 'parse', 'schedule'],
+    path: '/datetime/cron-interpreter',
+    component: lazy(() => import('./datetime/CronInterpreter')),
+  },
 
   // ── 网络工具（新增） ──
   {
@@ -406,6 +557,16 @@ const toolModules: ToolManifest[] = [
     keywords: ['http', 'api', '请求', '接口'],
     path: '/network/http-tester',
     component: lazy(() => import('./network/HttpTester')),
+  },
+  {
+    id: 'websocket-tester',
+    name: 'WebSocket 测试器',
+    description: '调试 WebSocket 连接，实时发送和接收消息',
+    category: 'network',
+    icon: 'Wifi',
+    keywords: ['websocket', 'ws', 'wss', '连接', '调试'],
+    path: '/network/websocket-tester',
+    component: lazy(() => import('./network/WebSocketTester')),
   },
   {
     id: 'dns-lookup',
@@ -427,6 +588,26 @@ const toolModules: ToolManifest[] = [
     path: '/network/url-parser',
     component: lazy(() => import('./network/UrlParser')),
   },
+  {
+    id: 'url-unshortener',
+    name: '短链接还原',
+    description: '追踪短链接重定向，显示完整跳转链和最终目标地址',
+    category: 'network',
+    icon: 'Link',
+    keywords: ['短链接', 'unshorten', 'redirect', 't.cn', 'bit.ly', 'tinyurl'],
+    path: '/network/url-unshortener',
+    component: lazy(() => import('./network/UrlUnshortener')),
+  },
+  {
+    id: 'github-accelerator',
+    name: 'GitHub 加速',
+    description: '将 GitHub 下载链接转换为镜像加速地址，支持多种镜像源',
+    category: 'network',
+    icon: 'Rocket',
+    keywords: ['github', '加速', '镜像', 'download', 'proxy'],
+    path: '/network/github-accelerator',
+    component: lazy(() => import('./network/Github加速')),
+  },
 
   // ── 图像工具（新增） ──
   {
@@ -439,6 +620,36 @@ const toolModules: ToolManifest[] = [
     path: '/image/image-crop',
     component: lazy(() => import('./image/ImageCrop')),
   },
+  {
+    id: 'svg-optimizer',
+    name: 'SVG 优化器',
+    description: '压缩、清理、格式化 SVG 文件',
+    category: 'image',
+    icon: 'Minimize2',
+    keywords: ['svg', '优化', '压缩', 'optimize', 'compress'],
+    path: '/image/svg-optimizer',
+    component: lazy(() => import('./image/SvgOptimizer')),
+  },
+  {
+    id: 'base64-image-viewer',
+    name: 'Base64 图片预览',
+    description: 'Base64 字符串转图片预览，支持拖拽上传和多种格式检测',
+    category: 'image',
+    icon: 'Eye',
+    keywords: ['base64', '图片', '预览', 'viewer', '查看'],
+    path: '/image/base64-image-viewer',
+    component: lazy(() => import('./image/Base64ImageViewer')),
+  },
+  {
+    id: 'image-to-ico',
+    name: '图片转 ICO',
+    description: '将图片转换为 Windows ICO 图标格式，支持多种尺寸',
+    category: 'image',
+    icon: 'ImageIcon',
+    keywords: ['ico', '图标', 'icon', 'windows', '图片转换'],
+    path: '/image/image-to-ico',
+    component: lazy(() => import('./image/ImageToIco')),
+  },
 
   // ── 前端开发（新增分类） ──
   {
@@ -450,6 +661,16 @@ const toolModules: ToolManifest[] = [
     keywords: ['颜色', 'color', '对比度', 'picker'],
     path: '/frontend/color-picker',
     component: lazy(() => import('./frontend/ColorPicker')),
+  },
+  {
+    id: 'rgb-color-table',
+    name: '颜色参考表',
+    description: '颜色调色板，支持 HEX/RGB/HSL 格式转换和复制',
+    category: 'frontend',
+    icon: 'Palette',
+    keywords: ['颜色', 'color', 'rgb', 'hex', 'hsl', '参考表', '调色板'],
+    path: '/frontend/rgb-color-table',
+    component: lazy(() => import('./frontend/RgbColorTable')),
   },
   {
     id: 'css-shadow',
@@ -470,6 +691,18 @@ const toolModules: ToolManifest[] = [
     keywords: ['flexbox', '布局', 'flex', 'css'],
     path: '/frontend/flexbox-playground',
     component: lazy(() => import('./frontend/FlexboxPlayground')),
+  },
+
+  // ── 休闲娱乐 ──
+  {
+    id: 'minesweeper',
+    name: '扫雷',
+    description: '经典扫雷游戏，点击揭开安全区域，右键标记地雷',
+    category: 'entertainment',
+    icon: 'Bomb',
+    keywords: ['扫雷', 'minesweeper', '雷', 'mine'],
+    path: '/entertainment/minesweeper',
+    component: lazy(() => import('./entertainment/Minesweeper')),
   },
 
   // ── GIS 地图 ──
@@ -532,6 +765,38 @@ const toolModules: ToolManifest[] = [
     keywords: ['边界框', 'bbox', 'bounding box', '范围'],
     path: '/gis/bounding-box',
     component: lazy(() => import('./gis/BoundingBox')),
+  },
+  {
+    id: 'coordinate-picker',
+    name: '地图坐标拾取',
+    description: '点击地图获取坐标，支持 WGS84/DMS/UTM 多种格式',
+    category: 'gis',
+    icon: 'MapPin',
+    keywords: ['坐标', '拾取', '地图', 'WGS84', 'DMS', 'UTM', 'picker'],
+    path: '/gis/coordinate-picker',
+    component: lazy(() => import('./gis/CoordinatePicker')),
+  },
+
+  // ── 休闲娱乐 ──
+  {
+    id: 'super-mario',
+    name: '超级马里奥',
+    description: '经典平台跳跃游戏，踩敌人、吃金币、收集道具',
+    category: 'entertainment',
+    icon: 'Gamepad2',
+    keywords: ['马里奥', '超级玛丽', 'platformer', 'platform', '游戏', '跳跃'],
+    path: '/entertainment/super-mario',
+    component: lazy(() => import('./entertainment/SuperMario')),
+  },
+  {
+    id: 'aircraft-battle',
+    name: '飞机大战',
+    description: '经典垂直射击游戏，击落敌机获取分数，支持多种敌人类型和道具',
+    category: 'entertainment',
+    icon: 'Plane',
+    keywords: ['飞机', '射击', '游戏', '飞机大战', 'aircraft', 'battle', 'shooter'],
+    path: '/entertainment/aircraft-battle',
+    component: lazy(() => import('./entertainment/AircraftBattle')),
   },
 ]
 

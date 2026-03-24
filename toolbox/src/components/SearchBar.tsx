@@ -35,10 +35,12 @@ export default function SearchBar() {
           onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
         />
-        {query && (
+        {query ? (
           <button className="search-clear" onClick={() => { setQuery(''); setOpen(false) }}>
             <X size={16} />
           </button>
+        ) : (
+          <kbd className="search-kbd">⌘K</kbd>
         )}
       </div>
       {open && results.length > 0 && (

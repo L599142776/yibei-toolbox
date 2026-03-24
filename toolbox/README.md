@@ -38,6 +38,7 @@
 | 坐标系转换 | WGS84 ↔ GCJ-02(高德) ↔ BD-09(百度) ↔ Mercator ↔ UTM ↔ DMS，支持批量 |
 | GeoJSON 编辑器 | 在线编辑/验证/格式化，实时地图预览，统计分析 |
 | 边界框工具 | 生成和可视化 bbox，输出 GeoJSON / LatLng / Google Maps 等多种格式 |
+| 地图坐标拾取 | 点击地图获取坐标，支持 WGS84 / DMS / UTM 多种格式 |
 
 ## 🚀 快速开始
 

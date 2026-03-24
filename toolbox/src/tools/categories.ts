@@ -74,4 +74,11 @@ export const categories: Category[] = [
     description: '地图文件解析、空间计算、坐标转换等 GIS 工具',
     color: '#059669',
   },
+  {
+    id: 'entertainment',
+    name: '休闲娱乐',
+    icon: 'Gamepad2',
+    description: '经典小游戏，消遣放松',
+    color: '#a855f7',
+  },
 ]

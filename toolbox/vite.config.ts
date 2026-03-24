@@ -48,7 +48,15 @@ export default defineConfig(async () => {
 
   return {
     plugins,
-    // Web 端也使用相对路径，确保 file:// 协议下能加载
     base: './',
+    server: {
+      proxy: {
+        '/phone-api': {
+          target: 'http://api.songzixian.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/phone-api/, '/api/phone-location'),
+        },
+      },
+    },
   }
 })

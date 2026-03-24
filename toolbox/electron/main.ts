@@ -1,5 +1,5 @@
 // electron/main.ts
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, shell, ipcMain } from 'electron'
 import { join } from 'path'
 import { fileURLToPath } from 'url'
 
@@ -22,8 +22,9 @@ function createWindow() {
       nodeIntegration: false,
       sandbox: false,
     },
-    backgroundColor: '#0f0f0f',
-    titleBarStyle: 'hiddenInset',
+    backgroundColor: '#0a0a0f',
+    frame: false,
+    titleBarStyle: 'hidden',
     trafficLightPosition: { x: 16, y: 16 },
   })
 
@@ -47,6 +48,27 @@ function createWindow() {
     mainWindow = null
   })
 }
+
+// 窗口控制 IPC 处理程序
+ipcMain.handle('window:minimize', () => {
+  mainWindow?.minimize()
+})
+
+ipcMain.handle('window:maximize', () => {
+  if (mainWindow?.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow?.maximize()
+  }
+})
+
+ipcMain.handle('window:close', () => {
+  mainWindow?.close()
+})
+
+ipcMain.handle('window:isMaximized', () => {
+  return mainWindow?.isMaximized() ?? false
+})
 
 app.whenReady().then(createWindow)
 

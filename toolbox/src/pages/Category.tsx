@@ -15,8 +15,11 @@ export default function Category() {
   if (!cat) {
     return (
       <div className="empty-state">
+        <div className="empty-state-icon">
+          <Icons.HelpCircle size={32} />
+        </div>
         <p>分类不存在</p>
-        <button onClick={() => navigate('/')}>返回首页</button>
+        <button className="btn" onClick={() => navigate('/')}>返回首页</button>
       </div>
     )
   }
@@ -27,11 +30,13 @@ export default function Category() {
     <div className="category-page">
       <div className="category-header">
         <button className="back-btn" onClick={() => navigate('/')}>
-          <ArrowLeft size={20} />
-          <span>返回</span>
+          <ArrowLeft size={18} />
+          <span>返回首页</span>
         </button>
         <div className="category-header-info" style={{ '--cat-color': cat.color } as React.CSSProperties}>
-          <CatIcon size={36} />
+          <div className="category-header-icon">
+            <CatIcon size={32} />
+          </div>
           <div>
             <h1>{cat.name}</h1>
             <p>{cat.description} · {tools.length} 个工具</p>

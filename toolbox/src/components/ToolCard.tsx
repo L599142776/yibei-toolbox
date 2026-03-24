@@ -24,10 +24,10 @@ export default function ToolCard({ tool }: Props) {
         onClick={(e) => { e.stopPropagation(); toggleFavorite(tool.id) }}
         title={fav ? '取消收藏' : '收藏'}
       >
-        <Star size={16} fill={fav ? 'currentColor' : 'none'} />
+        <Star size={18} fill={fav ? 'currentColor' : 'none'} />
       </button>
       <div className="tool-card-icon">
-        <IconComponent size={28} />
+        <IconComponent size={24} />
       </div>
       <h3 className="tool-card-name">{tool.name}</h3>
       <p className="tool-card-desc">{tool.description}</p>
