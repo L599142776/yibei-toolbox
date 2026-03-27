@@ -109,7 +109,7 @@ interface GameData {
   collectibles: Collectible[]
   coins: { x: number; y: number; vy: number; active: boolean; collected: boolean }[]
   camera: { x: number; y: number }
-  keys: { left: boolean; right: boolean; jump: boolean }
+  keys: { left: boolean; right: boolean; jump: boolean; jumpReleased: boolean }
   lastJumpPress: number
   animatingCoins: AnimatingCoin[]
   score: number
@@ -132,7 +132,6 @@ const createLevel = (): number[][] => {
   }
   
   for (let x = 0; x < 200; x++) {
-    if ((x > 69 && x < 80) || (x > 120 && x < 130)) continue
     level[18][x] = TILE_GROUND
     level[19][x] = TILE_GROUND
   }
@@ -322,7 +321,7 @@ const createDefaultGameData = (): GameData => ({
   collectibles: [],
   coins: [],
   camera: { x: 0, y: 0 },
-  keys: { left: false, right: false, jump: false },
+  keys: { left: false, right: false, jump: false, jumpReleased: true },
   lastJumpPress: 0,
   animatingCoins: [],
   score: 0,
@@ -473,11 +472,12 @@ export default function SuperMario() {
       if (Math.abs(player.vx) < 0.1) player.vx = 0
     }
     
-    if (game.keys.jump && player.onGround) {
+    if (game.keys.jump && player.onGround && game.keys.jumpReleased) {
       player.vy = JUMP_FORCE
       player.onGround = false
       player.jumping = true
       player.jumpingUp = true
+      game.keys.jumpReleased = false
       game.lastJumpPress = Date.now()
     }
     
@@ -526,17 +526,14 @@ export default function SuperMario() {
     player.onGround = false
     
     if (player.vy >= 0) {
-      const bottomY = player.y + player.height
-      const leftX = player.x + 2
-      const rightX = player.x + player.width - 2
+      const bottomY = player.y + player.height - 1
+      const leftTileX = Math.floor(player.x / TILE_SIZE)
+      const rightTileX = Math.floor((player.x + player.width - 0.1) / TILE_SIZE)
       
-      for (let tx = Math.floor(leftX / TILE_SIZE); tx <= Math.floor(rightX / TILE_SIZE); tx++) {
+      for (let tx = leftTileX; tx <= rightTileX; tx++) {
         const tile = getTile(tx * TILE_SIZE, bottomY)
         if (isSolidTile(tile)) {
-          player.y = tx * TILE_SIZE + TILE_SIZE - player.height - (bottomY - tx * TILE_SIZE - TILE_SIZE)
-          if (player.y + player.height > tx * TILE_SIZE && player.y + player.height < tx * TILE_SIZE + 16) {
-            player.y = tx * TILE_SIZE - player.height
-          }
+          player.y = Math.floor(bottomY / TILE_SIZE) * TILE_SIZE - player.height
           player.vy = 0
           player.onGround = true
           break
@@ -640,7 +637,7 @@ export default function SuperMario() {
       const bottomY = enemy.y + enemy.height
       for (let tx = leftTile; tx <= rightTile; tx++) {
         if (isSolidTile(getTile(tx * TILE_SIZE, bottomY))) {
-          enemy.y = tx * TILE_SIZE - enemy.height
+          enemy.y = Math.floor(bottomY / TILE_SIZE) * TILE_SIZE - enemy.height
           enemy.vy = 0
           break
         }
@@ -1269,23 +1266,41 @@ export default function SuperMario() {
             powerUp: 'none',
           })
         } else if (!gameStateRef.current.gameStarted) {
-          setGameState({
-            ...gameStateRef.current,
+          gameStateRef.current.gameStarted = true
+          setGameState(prev => ({
+            ...prev,
             gameStarted: true,
-          })
+          }))
+          if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'Left') {
+            game.keys.left = true
+          }
+          if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'Right') {
+            game.keys.right = true
+          }
+          if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'Up') {
+            if (game.keys.jumpReleased) {
+              game.keys.jump = true
+              game.keys.jumpReleased = false
+              game.lastJumpPress = Date.now()
+            }
+          }
+          e.preventDefault()
         }
         return
       }
       
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'Left') {
         game.keys.left = true
+        e.preventDefault()
       }
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'Right') {
         game.keys.right = true
+        e.preventDefault()
       }
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
-        if (!game.keys.jump) {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'Up') {
+        if (game.keys.jumpReleased) {
           game.keys.jump = true
+          game.keys.jumpReleased = false
           game.lastJumpPress = Date.now()
         }
         e.preventDefault()
@@ -1295,14 +1310,15 @@ export default function SuperMario() {
     const handleKeyUp = (e: KeyboardEvent) => {
       const game = gameRef.current
       
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'Left') {
         game.keys.left = false
       }
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'Right') {
         game.keys.right = false
       }
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ') {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === ' ' || e.key === 'Up') {
         game.keys.jump = false
+        game.keys.jumpReleased = true
       }
     }
     

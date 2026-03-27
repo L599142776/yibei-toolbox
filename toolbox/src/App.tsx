@@ -12,6 +12,7 @@ import ThemeToggle from './components/ThemeToggle'
 import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
 import CursorSettings from './components/CursorSettings'
+import GlobalLoading from './components/GlobalLoading'
 import Home from './pages/Home'
 import Category from './pages/Category'
 import { allTools } from './tools/registry'
@@ -63,7 +64,7 @@ function App() {
               <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
               
               <main className="main">
-                <Suspense fallback={<div className="loading">加载中...</div>}>
+                <Suspense fallback={<GlobalLoading message="页面加载中..." />}>
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/:categoryId" element={<Category />} />

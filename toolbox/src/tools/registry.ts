@@ -71,6 +71,16 @@ const toolModules: ToolManifest[] = [
     path: '/common/countdown',
     component: lazy(() => import('./common/Countdown')),
   },
+  {
+    id: 'interest-calculator',
+    name: '利息计算器',
+    description: '计算存款利息和贷款月供，支持定期存款和等额本息贷款',
+    category: 'common',
+    icon: 'Calculator',
+    keywords: ['利息', '存款', '贷款', '月供', '利率', 'interest'],
+    path: '/common/interest-calculator',
+    component: lazy(() => import('./common/InterestCalculator')),
+  },
 
   // ── 文本处理 ──
   {
@@ -703,6 +713,16 @@ const toolModules: ToolManifest[] = [
     keywords: ['扫雷', 'minesweeper', '雷', 'mine'],
     path: '/entertainment/minesweeper',
     component: lazy(() => import('./entertainment/Minesweeper')),
+  },
+  {
+    id: 'ascii-banner',
+    name: 'ASCII Banner 生成器',
+    description: '将文本转换为ASCII艺术字，支持多种字体样式',
+    category: 'entertainment',
+    icon: 'Type',
+    keywords: ['ASCII', 'banner', '艺术字', '字体', 'text'],
+    path: '/entertainment/ascii-banner',
+    component: lazy(() => import('./entertainment/AsciiBanner')),
   },
 
   // ── GIS 地图 ──

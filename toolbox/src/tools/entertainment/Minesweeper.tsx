@@ -130,19 +130,24 @@ function revealCell(
   cols: number
 ): Cell[][] {
   const newBoard = board.map((r) => r.map((c) => ({ ...c })))
-  const cell = newBoard[row][col]
+  const stack: [number, number][] = [[row, col]]
 
-  if (cell.state !== 'hidden') return newBoard
+  while (stack.length > 0) {
+    const [r, c] = stack.pop()!
+    const cell = newBoard[r][c]
 
-  cell.state = 'revealed'
+    if (cell.state !== 'hidden') continue
 
-  if (cell.adjacentMines === 0 && !cell.isMine) {
-    for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        const nr = row + dr
-        const nc = col + dc
-        if (nr >= 0 && nr < rows && nc >= 0 && nc < cols) {
-          newBoard[nr][nc] = revealCell(newBoard, nr, nc, rows, cols)[nr][nc]
+    cell.state = 'revealed'
+
+    if (cell.adjacentMines === 0 && !cell.isMine) {
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const nr = r + dr
+          const nc = c + dc
+          if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && newBoard[nr][nc].state === 'hidden') {
+            stack.push([nr, nc])
+          }
         }
       }
     }

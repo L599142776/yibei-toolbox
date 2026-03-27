@@ -20,6 +20,8 @@
     "@turf/turf": "^7.3.4",
     "@types/geojson": "^7946.0.16",
     "@types/leaflet": "^1.9.21",
+    "figlet": "^1.11.0",
+    "js-md5": "^0.8.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",

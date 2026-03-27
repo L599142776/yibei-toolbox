@@ -726,62 +726,139 @@ export default function MobileLookup() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(0,0,0,0.7)',
-          backdropFilter: 'blur(8px)',
+          background: 'linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 1000,
+          overflow: 'hidden',
         }}>
-          <div style={{ position: 'relative', width: 80, height: 80 }}>
+          {/* Animated background grid */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `
+              linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+            animation: 'gridMove 20s linear infinite',
+          }} />
+          
+          {/* Floating particles */}
+          {[...Array(20)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: Math.random() * 4 + 2 + 'px',
+              height: Math.random() * 4 + 2 + 'px',
+              background: `rgba(${Math.random() > 0.5 ? '99, 102, 241' : '139, 92, 246'}, ${Math.random() * 0.5 + 0.3})`,
+              borderRadius: '50%',
+              left: Math.random() * 100 + '%',
+              top: Math.random() * 100 + '%',
+              animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
+              animationDelay: Math.random() * 2 + 's',
+            }} />
+          ))}
+          
+          {/* Glowing orbs */}
+          <div style={{
+            position: 'absolute',
+            width: '400px',
+            height: '400px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)',
+            top: '10%',
+            left: '20%',
+            animation: 'pulse 4s ease-in-out infinite',
+          }} />
+          <div style={{
+            position: 'absolute',
+            width: '300px',
+            height: '300px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 70%)',
+            bottom: '15%',
+            right: '15%',
+            animation: 'pulse 5s ease-in-out infinite reverse',
+          }} />
+          <div style={{
+            position: 'absolute',
+            width: '250px',
+            height: '250px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, transparent 70%)',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            animation: 'pulse 3s ease-in-out infinite',
+          }} />
+          
+          {/* Main spinner */}
+          <div style={{ position: 'relative', width: 100, height: 100, zIndex: 1 }}>
             <div style={{
               position: 'absolute',
               inset: 0,
-              border: '4px solid rgba(99, 102, 241, 0.2)',
+              border: '4px solid rgba(99, 102, 241, 0.1)',
               borderTopColor: '#6366f1',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite',
+              boxShadow: '0 0 30px rgba(99, 102, 241, 0.5)',
             }} />
             <div style={{
               position: 'absolute',
-              inset: 8,
-              border: '4px solid rgba(139, 92, 246, 0.2)',
+              inset: 10,
+              border: '4px solid rgba(139, 92, 246, 0.1)',
               borderTopColor: '#8b5cf6',
               borderRadius: '50%',
-              animation: 'spin 1.5s linear infinite reverse',
+              animation: 'spin 1.4s linear infinite reverse',
+              boxShadow: '0 0 20px rgba(139, 92, 246, 0.4)',
             }} />
             <div style={{
               position: 'absolute',
-              inset: 16,
-              border: '4px solid rgba(168, 85, 247, 0.2)',
+              inset: 20,
+              border: '4px solid rgba(168, 85, 247, 0.1)',
               borderTopColor: '#a855f7',
               borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
+              animation: 'spin 0.7s linear infinite',
+              boxShadow: '0 0 15px rgba(168, 85, 247, 0.3)',
             }} />
             <div style={{
               position: 'absolute',
-              inset: 24,
-              border: '3px solid rgba(236, 72, 153, 0.2)',
+              inset: 30,
+              border: '3px solid rgba(236, 72, 153, 0.1)',
               borderTopColor: '#ec4899',
               borderRadius: '50%',
-              animation: 'spin 1.2s linear infinite reverse',
+              animation: 'spin 1.1s linear infinite reverse',
+              boxShadow: '0 0 10px rgba(236, 72, 153, 0.3)',
+            }} />
+            <div style={{
+              position: 'absolute',
+              inset: 40,
+              border: '2px solid rgba(99, 102, 241, 0.05)',
+              borderTopColor: '#6366f1',
+              borderRadius: '50%',
+              animation: 'spin 0.5s linear infinite',
             }} />
           </div>
+          
           <div style={{
-            marginTop: 24,
-            fontSize: 16,
+            marginTop: 32,
+            fontSize: 18,
             color: '#fff',
-            fontWeight: 500,
+            fontWeight: 600,
+            letterSpacing: '2px',
+            textShadow: '0 0 20px rgba(99, 102, 241, 0.8)',
+            zIndex: 1,
           }}>
-            正在查询归属地...
+            正在查询归属地
           </div>
           <div style={{
-            marginTop: 8,
-            fontSize: 13,
+            marginTop: 12,
+            fontSize: 14,
             color: 'rgba(255,255,255,0.5)',
+            zIndex: 1,
           }}>
-            智能匹配中
           </div>
         </div>
       )}
