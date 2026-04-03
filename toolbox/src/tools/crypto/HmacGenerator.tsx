@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 const algos = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'] as const
 
@@ -27,9 +28,11 @@ export default function HmacGenerator() {
     <ToolLayout title="HMAC 生成器" description="使用密钥计算 HMAC 哈希值">
       <div className="tool-row">
         <input className="input" value={key} onChange={(e) => setKey(e.target.value)} placeholder="密钥 (secret key)" style={{ flex: 1 }} />
-        <select className="select" value={algo} onChange={(e) => setAlgo(e.target.value)}>
-          {algos.map((a) => <option key={a} value={a}>{a}</option>)}
-        </select>
+        <Select
+          value={algo}
+          onChange={v => setAlgo(v)}
+          options={algos.map(a => ({ value: a, label: a }))}
+        />
       </div>
       <textarea className="textarea" value={data} onChange={(e) => setData(e.target.value)} placeholder="输入数据..." style={{ minHeight: 80, marginTop: 12 }} />
       <div className="btn-group" style={{ marginTop: 12 }}>

@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 const loremEn = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
 
@@ -36,11 +37,15 @@ export default function LoremIpsum() {
       </div>
       <div className="tool-row">
         <input className="input" type="number" min={1} max={100} value={count} onChange={(e) => setCount(Math.max(1, Number(e.target.value)))} style={{ width: 70 }} />
-        <select className="select" value={unit} onChange={(e) => setUnit(e.target.value as any)}>
-          <option value="paragraphs">段落</option>
-          <option value="sentences">句子</option>
-          <option value="words">词</option>
-        </select>
+        <Select
+          value={unit}
+          onChange={v => setUnit(v as 'paragraphs' | 'sentences' | 'words')}
+          options={[
+            { value: 'paragraphs', label: '段落' },
+            { value: 'sentences', label: '句子' },
+            { value: 'words', label: '词' },
+          ]}
+        />
       </div>
       <div className="tool-output-label" style={{ marginTop: 12 }}>
         <span className="tool-label">生成结果 ({output.length} 字符)</span>

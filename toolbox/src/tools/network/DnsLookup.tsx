@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 // 使用 DNS over HTTPS (Google/Cloudflare)
 export default function DnsLookup() {
@@ -38,9 +39,18 @@ export default function DnsLookup() {
       <div className="tool-row">
         <input className="input" value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="example.com" style={{ flex: 1 }}
           onKeyDown={(e) => e.key === 'Enter' && lookup()} />
-        <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
-          {['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS'].map((t) => <option key={t} value={t}>{t}</option>)}
-        </select>
+        <Select
+          value={type}
+          onChange={v => setType(v)}
+          options={[
+            { value: 'A', label: 'A' },
+            { value: 'AAAA', label: 'AAAA' },
+            { value: 'CNAME', label: 'CNAME' },
+            { value: 'MX', label: 'MX' },
+            { value: 'TXT', label: 'TXT' },
+            { value: 'NS', label: 'NS' },
+          ]}
+        />
         <button className="btn" onClick={lookup} disabled={loading}><Search size={16} /> 查询</button>
       </div>
       {error && <div style={{ color: '#ef4444', fontSize: 13, margin: '8px 0' }}>⚠ {error}</div>}

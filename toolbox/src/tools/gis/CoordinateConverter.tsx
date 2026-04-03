@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 // WGS84 → GCJ-02 (火星坐标) 偏移算法
 function wgs84ToGcj02(lng: number, lat: number): [number, number] {
@@ -211,20 +212,28 @@ export default function CoordinateConverter() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
         <div>
           <div className="tool-label">源坐标系</div>
-          <select className="select" value={batchFrom} onChange={e => setBatchFrom(e.target.value as System)}>
-            <option value="wgs84">WGS84</option>
-            <option value="gcj02">GCJ-02 (高德)</option>
-            <option value="bd09">BD-09 (百度)</option>
-          </select>
+          <Select
+            value={batchFrom}
+            onChange={v => setBatchFrom(v as System)}
+            options={[
+              { value: 'wgs84', label: 'WGS84' },
+              { value: 'gcj02', label: 'GCJ-02 (高德)' },
+              { value: 'bd09', label: 'BD-09 (百度)' },
+            ]}
+          />
         </div>
         <span style={{ color: 'var(--text-dim)', fontSize: 20, alignSelf: 'flex-end', paddingBottom: 10 }}>→</span>
         <div>
           <div className="tool-label">目标坐标系</div>
-          <select className="select" value={batchTo} onChange={e => setBatchTo(e.target.value as System)}>
-            <option value="wgs84">WGS84</option>
-            <option value="gcj02">GCJ-02 (高德)</option>
-            <option value="bd09">BD-09 (百度)</option>
-          </select>
+          <Select
+            value={batchTo}
+            onChange={v => setBatchTo(v as System)}
+            options={[
+              { value: 'wgs84', label: 'WGS84' },
+              { value: 'gcj02', label: 'GCJ-02 (高德)' },
+              { value: 'bd09', label: 'BD-09 (百度)' },
+            ]}
+          />
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-end' }}>
           <button className="btn" onClick={batchConvert}>批量转换</button>

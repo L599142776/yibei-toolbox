@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 const timezones = [
   { id: 'Asia/Shanghai', label: '北京/上海 (UTC+8)' },
@@ -48,9 +49,11 @@ export default function Timezone() {
       <div className="tool-row">
         <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         <input className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} step={1} />
-        <select className="select" value={fromTz} onChange={(e) => setFromTz(e.target.value)}>
-          {timezones.map((tz) => <option key={tz.id} value={tz.id}>{tz.label}</option>)}
-        </select>
+        <Select
+          value={fromTz}
+          onChange={v => setFromTz(v)}
+          options={timezones.map(tz => ({ value: tz.id, label: tz.label }))}
+        />
       </div>
       {results.length > 0 && (
         <div style={{ marginTop: 16 }}>

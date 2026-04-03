@@ -727,6 +727,16 @@ const toolModules: ToolManifest[] = [
 
   // ── GIS 地图 ──
   {
+    id: 'shapefile-converter',
+    name: 'Shapefile 解析与导出',
+    description: '解析 Shapefile (.shp/.dbf/.prj) 或 ZIP 压缩包，查看属性表格并导出',
+    category: 'gis',
+    icon: 'Map',
+    keywords: ['shapefile', 'shp', 'dbf', 'prj', 'gis', '解析', '导出', '属性表'],
+    path: '/gis/shapefile-converter',
+    component: lazy(() => import('./gis/ShapefileConverter')),
+  },
+  {
     id: 'map-viewer',
     name: '地图文件查看器',
     description: '在线解析 Shapefile / GeoJSON，地图可视化展示',

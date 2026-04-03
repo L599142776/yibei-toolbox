@@ -1,6 +1,7 @@
 // src/tools/common/QrGenerator.tsx
 import { useState, useRef } from 'react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 // 轻量 QR 生成 — 使用在线 API (避免引入重依赖)
 export default function QrGenerator() {
@@ -33,11 +34,15 @@ export default function QrGenerator() {
       </div>
       <div className="tool-row">
         <label className="tool-label">尺寸:</label>
-        <select className="select" value={size} onChange={(e) => setSize(Number(e.target.value))}>
-          <option value={128}>128 x 128</option>
-          <option value={256}>256 x 256</option>
-          <option value={512}>512 x 512</option>
-        </select>
+        <Select
+          value={String(size)}
+          onChange={v => setSize(Number(v))}
+          options={[
+            { value: '128', label: '128 x 128' },
+            { value: '256', label: '256 x 256' },
+            { value: '512', label: '512 x 512' },
+          ]}
+        />
       </div>
       {qrUrl && (
         <div style={{ textAlign: 'center', margin: '24px 0' }}>

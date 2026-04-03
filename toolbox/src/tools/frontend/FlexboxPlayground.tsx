@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse'
 type Justify = 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly'
@@ -23,27 +24,61 @@ export default function FlexboxPlayground() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
         <div>
           <span className="tool-label">flex-direction</span>
-          <select className="select" value={direction} onChange={(e) => setDirection(e.target.value as Direction)} style={{ width: '100%' }}>
-            {(['row', 'row-reverse', 'column', 'column-reverse'] as Direction[]).map((d) => <option key={d} value={d}>{d}</option>)}
-          </select>
+          <Select
+            value={direction}
+            onChange={v => setDirection(v as Direction)}
+            options={[
+              { value: 'row', label: 'row' },
+              { value: 'row-reverse', label: 'row-reverse' },
+              { value: 'column', label: 'column' },
+              { value: 'column-reverse', label: 'column-reverse' },
+            ]}
+            width="100%"
+          />
         </div>
         <div>
           <span className="tool-label">justify-content</span>
-          <select className="select" value={justify} onChange={(e) => setJustify(e.target.value as Justify)} style={{ width: '100%' }}>
-            {(['flex-start', 'center', 'flex-end', 'space-between', 'space-around', 'space-evenly'] as Justify[]).map((j) => <option key={j} value={j}>{j}</option>)}
-          </select>
+          <Select
+            value={justify}
+            onChange={v => setJustify(v as Justify)}
+            options={[
+              { value: 'flex-start', label: 'flex-start' },
+              { value: 'center', label: 'center' },
+              { value: 'flex-end', label: 'flex-end' },
+              { value: 'space-between', label: 'space-between' },
+              { value: 'space-around', label: 'space-around' },
+              { value: 'space-evenly', label: 'space-evenly' },
+            ]}
+            width="100%"
+          />
         </div>
         <div>
           <span className="tool-label">align-items</span>
-          <select className="select" value={align} onChange={(e) => setAlign(e.target.value as Align)} style={{ width: '100%' }}>
-            {(['stretch', 'flex-start', 'center', 'flex-end', 'baseline'] as Align[]).map((a) => <option key={a} value={a}>{a}</option>)}
-          </select>
+          <Select
+            value={align}
+            onChange={v => setAlign(v as Align)}
+            options={[
+              { value: 'stretch', label: 'stretch' },
+              { value: 'flex-start', label: 'flex-start' },
+              { value: 'center', label: 'center' },
+              { value: 'flex-end', label: 'flex-end' },
+              { value: 'baseline', label: 'baseline' },
+            ]}
+            width="100%"
+          />
         </div>
         <div>
           <span className="tool-label">flex-wrap</span>
-          <select className="select" value={wrap} onChange={(e) => setWrap(e.target.value as Wrap)} style={{ width: '100%' }}>
-            {(['nowrap', 'wrap', 'wrap-reverse'] as Wrap[]).map((w) => <option key={w} value={w}>{w}</option>)}
-          </select>
+          <Select
+            value={wrap}
+            onChange={v => setWrap(v as Wrap)}
+            options={[
+              { value: 'nowrap', label: 'nowrap' },
+              { value: 'wrap', label: 'wrap' },
+              { value: 'wrap-reverse', label: 'wrap-reverse' },
+            ]}
+            width="100%"
+          />
         </div>
         <div>
           <span className="tool-label">gap: {gap}px</span>

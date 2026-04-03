@@ -1,6 +1,7 @@
 // src/tools/common/UnitConverter.tsx
 import { useState } from 'react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 type UnitCategory = 'length' | 'weight' | 'temperature'
 
@@ -65,18 +66,22 @@ export default function UnitConverter() {
       </div>
       <div className="tool-row">
         <input className="input" type="number" value={inputVal} onChange={(e) => setInputVal(e.target.value)} style={{ flex: 1 }} />
-        <select className="select" value={fromUnit} onChange={(e) => setFromUnit(e.target.value)}>
-          {data.units.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
-        </select>
+        <Select
+          value={fromUnit}
+          onChange={v => setFromUnit(v)}
+          options={data.units.map(u => ({ value: u.id, label: u.label }))}
+        />
       </div>
       <div style={{ textAlign: 'center', fontSize: 24, margin: '16px 0', color: 'var(--accent)' }}>↓</div>
       <div className="tool-row">
         <div className="tool-output" style={{ flex: 1, fontSize: 20, textAlign: 'center' }}>
           {Number.isFinite(result) ? result.toPrecision(10).replace(/\.?0+$/, '') : '—'}
         </div>
-        <select className="select" value={toUnit} onChange={(e) => setToUnit(e.target.value)}>
-          {data.units.map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
-        </select>
+        <Select
+          value={toUnit}
+          onChange={v => setToUnit(v)}
+          options={data.units.map(u => ({ value: u.id, label: u.label }))}
+        />
       </div>
     </ToolLayout>
   )

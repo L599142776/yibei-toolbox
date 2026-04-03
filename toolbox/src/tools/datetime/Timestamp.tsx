@@ -1,6 +1,7 @@
 // src/tools/datetime/Timestamp.tsx
 import { useState, useEffect } from 'react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 export default function Timestamp() {
   const [now, setNow] = useState(Date.now())
@@ -48,10 +49,14 @@ export default function Timestamp() {
       <span className="tool-label">时间戳 → 日期时间</span>
       <div className="tool-row" style={{ marginTop: 8 }}>
         <input className="input" value={tsInput} onChange={(e) => setTsInput(e.target.value)} placeholder="输入时间戳..." style={{ flex: 1 }} />
-        <select className="select" value={tsUnit} onChange={(e) => setTsUnit(e.target.value as 's' | 'ms')}>
-          <option value="s">秒</option>
-          <option value="ms">毫秒</option>
-        </select>
+        <Select
+          value={tsUnit}
+          onChange={v => setTsUnit(v as 's' | 'ms')}
+          options={[
+            { value: 's', label: '秒' },
+            { value: 'ms', label: '毫秒' },
+          ]}
+        />
       </div>
       {parsedDate && <div className="tool-output" style={{ marginTop: 8, textAlign: 'center', fontSize: 16 }}>{parsedDate}</div>}
 

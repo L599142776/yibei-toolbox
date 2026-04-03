@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Wifi, WifiOff, Send, Trash2, Download, Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 interface LogEntry {
   id: number
@@ -349,17 +350,17 @@ export default function WebSocketTester() {
             自动重连
           </label>
           {autoReconnect && (
-            <select
-              className="select"
-              value={reconnectInterval}
-              onChange={(e) => setReconnectInterval(Number(e.target.value))}
-              style={{ width: 80 }}
-            >
-              <option value={1000}>1s</option>
-              <option value={3000}>3s</option>
-              <option value={5000}>5s</option>
-              <option value={10000}>10s</option>
-            </select>
+            <Select
+              value={String(reconnectInterval)}
+              onChange={v => setReconnectInterval(Number(v))}
+              options={[
+                { value: '1000', label: '1s' },
+                { value: '3000', label: '3s' },
+                { value: '5000', label: '5s' },
+                { value: '10000', label: '10s' },
+              ]}
+              width={80}
+            />
           )}
         </div>
       </div>
@@ -411,17 +412,17 @@ export default function WebSocketTester() {
             自动发送
           </label>
           {autoSendInterval > 0 && (
-            <select
-              className="select"
-              value={autoSendInterval}
-              onChange={(e) => setAutoSendInterval(Number(e.target.value))}
-              style={{ width: 80 }}
-            >
-              <option value={500}>0.5s</option>
-              <option value={1000}>1s</option>
-              <option value={2000}>2s</option>
-              <option value={5000}>5s</option>
-            </select>
+            <Select
+              value={String(autoSendInterval)}
+              onChange={v => setAutoSendInterval(Number(v))}
+              options={[
+                { value: '500', label: '0.5s' },
+                { value: '1000', label: '1s' },
+                { value: '2000', label: '2s' },
+                { value: '5000', label: '5s' },
+              ]}
+              width={80}
+            />
           )}
           <span style={{ fontSize: 11, color: 'var(--text-secondary)', marginLeft: 4 }}>
             Ctrl+Enter 快速发送

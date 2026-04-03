@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Send } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
@@ -48,9 +49,17 @@ export default function HttpTester() {
   return (
     <ToolLayout title="HTTP 请求测试" description="API 接口调试工具，支持多种请求方法">
       <div className="tool-row">
-        <select className="select" value={method} onChange={(e) => setMethod(e.target.value as Method)}>
-          {(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] as Method[]).map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
+        <Select
+          value={method}
+          onChange={v => setMethod(v as Method)}
+          options={[
+            { value: 'GET', label: 'GET' },
+            { value: 'POST', label: 'POST' },
+            { value: 'PUT', label: 'PUT' },
+            { value: 'DELETE', label: 'DELETE' },
+            { value: 'PATCH', label: 'PATCH' },
+          ]}
+        />
         <input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://api.example.com/endpoint" style={{ flex: 1 }} />
         <button className="btn" onClick={send} disabled={loading}>
           <Send size={16} /> {loading ? '发送中...' : '发送'}

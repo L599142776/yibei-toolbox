@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 export default function BaseConverter() {
   const [input, setInput] = useState('255')
@@ -28,9 +29,11 @@ export default function BaseConverter() {
           placeholder="输入数值"
           style={{ flex: 1 }}
         />
-        <select className="select" value={fromBase} onChange={(e) => setFromBase(Number(e.target.value))}>
-          {bases.map((b) => <option key={b} value={b}>{b} 进制</option>)}
-        </select>
+        <Select
+          value={String(fromBase)}
+          onChange={v => setFromBase(Number(v))}
+          options={bases.map(b => ({ value: String(b), label: `${b} 进制` }))}
+        />
       </div>
       <hr className="tool-divider" />
       <div style={{ display: 'grid', gap: 12 }}>

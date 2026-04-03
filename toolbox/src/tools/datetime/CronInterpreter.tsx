@@ -2,6 +2,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { Copy, Check, AlertCircle } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import Select from '../../components/Select'
 
 // ============================================================
 // 类型定义
@@ -417,21 +418,21 @@ export default function CronInterpreter() {
             {/* 分钟 */}
             <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: '#f59e0b', marginBottom: 8, fontWeight: 500 }}>分钟</div>
-              <select
-                className="select"
+              <Select
                 value={buildParts.minute}
-                onChange={(e) => updateBuildPart('minute', e.target.value)}
-              >
-                <option value="*">每分钟</option>
-                <option value="0">0 (整点)</option>
-                <option value="*/5">每5分钟</option>
-                <option value="*/10">每10分钟</option>
-                <option value="*/15">每15分钟</option>
-                <option value="*/30">每30分钟</option>
-                <option value="0,30">0和30分</option>
-                <option value="0-29">0-29分</option>
-                <option value="30-59">30-59分</option>
-              </select>
+                onChange={v => updateBuildPart('minute', v)}
+                options={[
+                  { value: '*', label: '每分钟' },
+                  { value: '0', label: '0 (整点)' },
+                  { value: '*/5', label: '每5分钟' },
+                  { value: '*/10', label: '每10分钟' },
+                  { value: '*/15', label: '每15分钟' },
+                  { value: '*/30', label: '每30分钟' },
+                  { value: '0,30', label: '0和30分' },
+                  { value: '0-29', label: '0-29分' },
+                  { value: '30-59', label: '30-59分' },
+                ]}
+              />
               <input
                 className="input"
                 value={buildParts.minute}
@@ -444,21 +445,21 @@ export default function CronInterpreter() {
             {/* 小时 */}
             <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: '#10b981', marginBottom: 8, fontWeight: 500 }}>小时</div>
-              <select
-                className="select"
+              <Select
                 value={buildParts.hour}
-                onChange={(e) => updateBuildPart('hour', e.target.value)}
-              >
-                <option value="*">每小时</option>
-                <option value="0">0 (午夜)</option>
-                <option value="9">9 (上午)</option>
-                <option value="12">12 (中午)</option>
-                <option value="18">18 (下午)</option>
-                <option value="*/2">每2小时</option>
-                <option value="*/6">每6小时</option>
-                <option value="9-17">9-17</option>
-                <option value="0,12">0和12</option>
-              </select>
+                onChange={v => updateBuildPart('hour', v)}
+                options={[
+                  { value: '*', label: '每小时' },
+                  { value: '0', label: '0 (午夜)' },
+                  { value: '9', label: '9 (上午)' },
+                  { value: '12', label: '12 (中午)' },
+                  { value: '18', label: '18 (下午)' },
+                  { value: '*/2', label: '每2小时' },
+                  { value: '*/6', label: '每6小时' },
+                  { value: '9-17', label: '9-17' },
+                  { value: '0,12', label: '0和12' },
+                ]}
+              />
               <input
                 className="input"
                 value={buildParts.hour}
@@ -471,19 +472,19 @@ export default function CronInterpreter() {
             {/* 日期 */}
             <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: '#3b82f6', marginBottom: 8, fontWeight: 500 }}>日期</div>
-              <select
-                className="select"
+              <Select
                 value={buildParts.dayOfMonth}
-                onChange={(e) => updateBuildPart('dayOfMonth', e.target.value)}
-              >
-                <option value="*">每天</option>
-                <option value="1">1号</option>
-                <option value="15">15号</option>
-                <option value="1,15">1号和15号</option>
-                <option value="1-7">1-7号</option>
-                <option value="*/2">每隔一天</option>
-                <option value="*/7">每周</option>
-              </select>
+                onChange={v => updateBuildPart('dayOfMonth', v)}
+                options={[
+                  { value: '*', label: '每天' },
+                  { value: '1', label: '1号' },
+                  { value: '15', label: '15号' },
+                  { value: '1,15', label: '1号和15号' },
+                  { value: '1-7', label: '1-7号' },
+                  { value: '*/2', label: '每隔一天' },
+                  { value: '*/7', label: '每周' },
+                ]}
+              />
               <input
                 className="input"
                 value={buildParts.dayOfMonth}
@@ -496,19 +497,19 @@ export default function CronInterpreter() {
             {/* 月份 */}
             <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: '#8b5cf6', marginBottom: 8, fontWeight: 500 }}>月份</div>
-              <select
-                className="select"
+              <Select
                 value={buildParts.month}
-                onChange={(e) => updateBuildPart('month', e.target.value)}
-              >
-                <option value="*">每月</option>
-                <option value="1">一月</option>
-                <option value="6">六月</option>
-                <option value="12">十二月</option>
-                <option value="1,4,7,10">每季度</option>
-                <option value="1-6">上半年</option>
-                <option value="*/3">每季度</option>
-              </select>
+                onChange={v => updateBuildPart('month', v)}
+                options={[
+                  { value: '*', label: '每月' },
+                  { value: '1', label: '一月' },
+                  { value: '6', label: '六月' },
+                  { value: '12', label: '十二月' },
+                  { value: '1,4,7,10', label: '每季度' },
+                  { value: '1-6', label: '上半年' },
+                  { value: '*/3', label: '每季度' },
+                ]}
+              />
               <input
                 className="input"
                 value={buildParts.month}
@@ -521,22 +522,22 @@ export default function CronInterpreter() {
             {/* 星期 */}
             <div style={{ background: 'var(--bg-secondary)', padding: 12, borderRadius: 8 }}>
               <div style={{ fontSize: 12, color: '#ef4444', marginBottom: 8, fontWeight: 500 }}>星期</div>
-              <select
-                className="select"
+              <Select
                 value={buildParts.dayOfWeek}
-                onChange={(e) => updateBuildPart('dayOfWeek', e.target.value)}
-              >
-                <option value="*">每天</option>
-                <option value="0">周日</option>
-                <option value="1">周一</option>
-                <option value="2">周二</option>
-                <option value="3">周三</option>
-                <option value="4">周四</option>
-                <option value="5">周五</option>
-                <option value="6">周六</option>
-                <option value="1-5">工作日</option>
-                <option value="0,6">周末</option>
-              </select>
+                onChange={v => updateBuildPart('dayOfWeek', v)}
+                options={[
+                  { value: '*', label: '每天' },
+                  { value: '0', label: '周日' },
+                  { value: '1', label: '周一' },
+                  { value: '2', label: '周二' },
+                  { value: '3', label: '周三' },
+                  { value: '4', label: '周四' },
+                  { value: '5', label: '周五' },
+                  { value: '6', label: '周六' },
+                  { value: '1-5', label: '工作日' },
+                  { value: '0,6', label: '周末' },
+                ]}
+              />
               <input
                 className="input"
                 value={buildParts.dayOfWeek}
@@ -587,17 +588,17 @@ export default function CronInterpreter() {
             <span className="tool-label">下次执行时间</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 13, color: 'var(--text-dim)' }}>显示</span>
-              <select
-                className="select"
-                value={nextRunCount}
-                onChange={(e) => setNextRunCount(Number(e.target.value))}
-                style={{ width: 80, fontSize: 13, padding: '4px 8px' }}
-              >
-                <option value={5}>5次</option>
-                <option value={10}>10次</option>
-                <option value={20}>20次</option>
-                <option value={50}>50次</option>
-              </select>
+              <Select
+                value={String(nextRunCount)}
+                onChange={v => setNextRunCount(Number(v))}
+                options={[
+                  { value: '5', label: '5次' },
+                  { value: '10', label: '10次' },
+                  { value: '20', label: '20次' },
+                  { value: '50', label: '50次' },
+                ]}
+                width={80}
+              />
             </div>
           </div>
           <div className="tool-output">

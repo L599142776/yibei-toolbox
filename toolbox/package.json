@@ -17,11 +17,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@microti/file-handler": "^1.0.2",
+    "@tanstack/react-virtual": "^3.13.23",
     "@turf/turf": "^7.3.4",
     "@types/geojson": "^7946.0.16",
     "@types/leaflet": "^1.9.21",
     "figlet": "^1.11.0",
     "js-md5": "^0.8.3",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "react": "^19.2.4",
@@ -32,6 +35,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@types/jszip": "^3.4.0",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
