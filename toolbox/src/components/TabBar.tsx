@@ -1,5 +1,4 @@
 // src/components/TabBar.tsx
-import { useState } from 'react'
 import { Home, Grid3X3, List, Star } from 'lucide-react'
 
 type Tab = 'home' | 'categories' | 'all' | 'favorites'

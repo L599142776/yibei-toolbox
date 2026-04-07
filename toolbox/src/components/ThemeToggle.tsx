@@ -4,7 +4,7 @@ import { Sun, Moon, Monitor, ChevronDown } from 'lucide-react'
 import { useTheme } from '../contexts/ThemeContext'
 
 export default function ThemeToggle() {
-  const { theme, setTheme, resolvedTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 

@@ -54,7 +54,7 @@ export default defineConfig(async () => {
         '/phone-api': {
           target: 'http://api.songzixian.com',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/phone-api/, '/api/phone-location'),
+          rewrite: (path: string) => path.replace(/^\/phone-api/, '/api/phone-location'),
         },
       },
     },

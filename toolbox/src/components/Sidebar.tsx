@@ -1,6 +1,6 @@
 // src/components/Sidebar.tsx
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Home, Grid3X3, List, Star, Search, ChevronRight } from 'lucide-react'
+import { Home, List, Star } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { categories } from '../tools/categories'
 import { allTools } from '../tools/registry'
@@ -79,7 +79,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     className={`sidebar-item ${location.pathname === `/${cat.id}` ? 'active' : ''}`}
                     onClick={() => handleNavClick(`/${cat.id}`)}
                   >
-                    <CatIcon size={18} style={{ color: cat.color }} />
+                    <span style={{ color: cat.color, display: 'inline-flex' }}><CatIcon size={18} /></span>
                     <span>{cat.name}</span>
                     <span className="sidebar-count">{count}</span>
                   </button>
