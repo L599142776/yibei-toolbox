@@ -4,7 +4,7 @@ import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/Select'
 
 export default function Timestamp() {
-  const [now, setNow] = useState(Date.now())
+  const [now, setNow] = useState(0)
   const [tsInput, setTsInput] = useState('')
   const [tsUnit, setTsUnit] = useState<'s' | 'ms'>('s')
 

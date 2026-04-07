@@ -11,7 +11,7 @@ interface IpInfo {
   loc?: string
   org?: string
   timezone?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export default function IpLookup() {
@@ -28,10 +28,14 @@ export default function IpLookup() {
       const url = ip ? `https://ipinfo.io/${ip}/json` : 'https://ipinfo.io/json'
       const res = await fetch(url)
       if (!res.ok) throw new Error('查询失败')
-      const data = await res.json()
-      setInfo(data)
-    } catch (e: any) {
-      setError(e.message)
+      const data: unknown = await res.json()
+      if (typeof data === 'object' && data !== null) {
+        setInfo(data as IpInfo)
+      } else {
+        setError('返回数据格式异常')
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '查询失败')
     } finally {
       setLoading(false)
     }

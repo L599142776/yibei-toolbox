@@ -1,6 +1,40 @@
+import { useEffect, useState } from 'react'
 import { Smartphone } from 'lucide-react'
 
+interface Particle {
+  size: number
+  background: string
+  left: string
+  top: string
+  durationSec: number
+  delaySec: number
+}
+
+function createParticles(count: number): Particle[] {
+  const colors = ['99, 102, 241', '139, 92, 246', '236, 72, 153']
+  return Array.from({ length: count }, () => {
+    const size = Math.random() * 4 + 2
+    const alpha = Math.random() * 0.5 + 0.3
+    const color = colors[Math.floor(Math.random() * colors.length)]
+    return {
+      size,
+      background: `rgba(${color}, ${alpha})`,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      durationSec: Math.random() * 3 + 2,
+      delaySec: Math.random() * 2,
+    }
+  })
+}
+
 export default function GlobalLoading({ message = '加载中...' }: { message?: string }) {
+  const [particles, setParticles] = useState<Particle[]>([])
+
+  useEffect(() => {
+    const id = window.requestAnimationFrame(() => setParticles(createParticles(15)))
+    return () => window.cancelAnimationFrame(id)
+  }, [])
+
   return (
     <div style={{
       position: 'fixed',
@@ -27,17 +61,17 @@ export default function GlobalLoading({ message = '加载中...' }: { message?: 
         animation: 'gridMove 20s linear infinite',
       }} />
       
-      {[...Array(15)].map((_, i) => (
+      {particles.map((p, i) => (
         <div key={i} style={{
           position: 'absolute',
-          width: Math.random() * 4 + 2 + 'px',
-          height: Math.random() * 4 + 2 + 'px',
-          background: `rgba(${Math.random() > 0.5 ? '99, 102, 241' : Math.random() > 0.5 ? '139, 92, 246' : '236, 72, 153'}, ${Math.random() * 0.5 + 0.3})`,
+          width: `${p.size}px`,
+          height: `${p.size}px`,
+          background: p.background,
           borderRadius: '50%',
-          left: Math.random() * 100 + '%',
-          top: Math.random() * 100 + '%',
-          animation: `float ${Math.random() * 3 + 2}s ease-in-out infinite`,
-          animationDelay: Math.random() * 2 + 's',
+          left: p.left,
+          top: p.top,
+          animation: `float ${p.durationSec}s ease-in-out infinite`,
+          animationDelay: `${p.delaySec}s`,
         }} />
       ))}
       

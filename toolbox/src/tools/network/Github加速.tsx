@@ -11,11 +11,15 @@ const MIRRORS = [
 ]
 
 const PATTERNS = [
-  { regex: /github\.com\/([^\/]+)\/([^\/]+)\/releases\/download\/([^\/]+)\/(.+)/, type: 'release' },
-  { regex: /github\.com\/([^\/]+)\/([^\/]+)\/archive\/(.+)/, type: 'archive' },
-  { regex: /raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/(.+)/, type: 'raw' },
-  { regex: /api\.github\.com\/repos\/([^\/]+)\/([^\/]+)\/releases\/assets\/(\d+)/, type: 'api-release' },
+  { regex: new RegExp('github\\.com/([^/]+)/([^/]+)/releases/download/([^/]+)/(.+)'), type: 'release' },
+  { regex: new RegExp('github\\.com/([^/]+)/([^/]+)/archive/(.+)'), type: 'archive' },
+  { regex: new RegExp('raw\\.githubusercontent\\.com/([^/]+)/([^/]+)/(.+)'), type: 'raw' },
+  { regex: new RegExp('api\\.github\\.com/repos/([^/]+)/([^/]+)/releases/assets/(\\d+)'), type: 'api-release' },
 ]
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
 
 interface MirrorResult {
   name: string
@@ -46,7 +50,7 @@ function formatNumber(num: number): string {
   return num.toString()
 }
 
-export default function Github加速() {
+export default function GithubAccelerator() {
   const [input, setInput] = useState('')
   const [mirrors, setMirrors] = useState<MirrorResult[]>([])
   const [urlType, setUrlType] = useState<string>('')
@@ -101,8 +105,8 @@ export default function Github加速() {
     }
     
     if (!matched) {
-      const releasePageMatch = input.match(/github\.com\/([^\/]+)\/([^\/]+)\/releases/)
-      const repoPageMatch = input.match(/github\.com\/([^\/]+)\/([^\/]+?)(?:\/|$)/)
+      const releasePageMatch = input.match(new RegExp('github\\.com/([^/]+)/([^/]+)/releases'))
+      const repoPageMatch = input.match(new RegExp('github\\.com/([^/]+)/([^/]+?)(?:/|$)'))
 
       if (releasePageMatch) {
         owner = releasePageMatch[1]
@@ -126,11 +130,15 @@ export default function Github加速() {
 
     let downloadUrl = input.trim()
 
-    downloadUrl = downloadUrl.replace(/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/(.+)/,
-      'github.com/$1/$2/raw/$3')
+    downloadUrl = downloadUrl.replace(
+      new RegExp('raw\\.githubusercontent\\.com/([^/]+)/([^/]+)/(.+)'),
+      'github.com/$1/$2/raw/$3'
+    )
 
-    downloadUrl = downloadUrl.replace(/api\.github\.com\/repos\/([^\/]+)\/([^\/]+)\/releases\/assets\/(\d+)/,
-      'github.com/$1/$2/releases/download/latest/unknown')
+    downloadUrl = downloadUrl.replace(
+      new RegExp('api\\.github\\.com/repos/([^/]+)/([^/]+)/releases/assets/(\\d+)'),
+      'github.com/$1/$2/releases/download/latest/unknown'
+    )
 
     const newMirrors = MIRRORS.map(m => ({
       name: m.name,
@@ -152,21 +160,27 @@ export default function Github加速() {
       if (!response.ok) {
         throw new Error('Failed to fetch release info')
       }
-      const data = await response.json()
+      const raw: unknown = await response.json()
+      const data = isRecord(raw) ? raw : {}
 
-      if (data.assets && data.assets.length > 0) {
-        setReleaseAssets(data.assets.map((a: any) => ({
-          id: a.id,
-          name: a.name,
-          size: a.size,
-          download_count: a.download_count || 0,
-          browser_download_url: a.browser_download_url,
-        })))
+      const assets = Array.isArray(data.assets) ? data.assets : []
+      if (assets.length > 0) {
+        setReleaseAssets(
+          assets
+            .filter(isRecord)
+            .map((a) => ({
+              id: typeof a.id === 'number' ? a.id : Number(a.id),
+              name: typeof a.name === 'string' ? a.name : String(a.name ?? ''),
+              size: typeof a.size === 'number' ? a.size : Number(a.size ?? 0),
+              download_count: typeof a.download_count === 'number' ? a.download_count : Number(a.download_count ?? 0),
+              browser_download_url: typeof a.browser_download_url === 'string' ? a.browser_download_url : String(a.browser_download_url ?? ''),
+            }))
+        )
       } else {
         setAssetError('No assets found in latest release')
       }
-    } catch (err) {
-      setAssetError('Failed to fetch release info. Rate limit may be exceeded.')
+    } catch (err: unknown) {
+      setAssetError(err instanceof Error ? err.message : 'Failed to fetch release info. Rate limit may be exceeded.')
     } finally {
       setLoadingAssets(false)
     }
@@ -184,12 +198,14 @@ export default function Github加速() {
   }, [mirrors, copyToClipboard])
   
   const copyMirror = useCallback((index: number) => {
-    copyToClipboard(mirrors[index].url)
+    const url = mirrors[index]?.url
+    if (!url) return
+    copyToClipboard(url)
     setMirrors(prev => prev.map((m, i) => i === index ? { ...m, copied: true } : m))
     setTimeout(() => {
       setMirrors(prev => prev.map((m, i) => i === index ? { ...m, copied: false } : m))
     }, 1500)
-  }, [copyToClipboard])
+  }, [copyToClipboard, mirrors])
   
   const openInBrowser = useCallback((url: string) => {
     window.open(url, '_blank')

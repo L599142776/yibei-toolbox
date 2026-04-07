@@ -1,5 +1,5 @@
 // src/tools/crypto/JwtDebugger.tsx
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import ToolLayout from '../../components/ToolLayout'
 import {
   Copy, RefreshCw, Check, X, AlertTriangle, Clock,
@@ -36,13 +36,13 @@ interface ExpirationStatus {
   label: string
 }
 
-function checkExpiration(payload: Record<string, any>): ExpirationStatus {
+function checkExpiration(payload: Record<string, unknown>): ExpirationStatus {
   const now = Math.floor(Date.now() / 1000)
-  const exp = payload.exp
-  const iat = payload.iat
-  const nbf = payload.nbf
+  const exp = typeof payload.exp === 'number' ? payload.exp : null
+  const iat = typeof payload.iat === 'number' ? payload.iat : null
+  const nbf = typeof payload.nbf === 'number' ? payload.nbf : null
 
-  if (nbf && now < nbf) {
+  if (typeof nbf === 'number' && now < nbf) {
     const diff = nbf - now
     const hours = Math.floor(diff / 3600)
     const minutes = Math.floor((diff % 3600) / 60)
@@ -53,7 +53,7 @@ function checkExpiration(payload: Record<string, any>): ExpirationStatus {
     }
   }
 
-  if (exp) {
+  if (typeof exp === 'number') {
     if (now > exp) {
       const diff = now - exp
       return {
@@ -92,7 +92,7 @@ function checkExpiration(payload: Record<string, any>): ExpirationStatus {
     }
   }
 
-  if (iat) {
+  if (typeof iat === 'number') {
     return {
       status: 'valid',
       time: `签发时间: ${formatTime(iat)}`,
@@ -138,14 +138,43 @@ const commonClaims = [
   { claim: 'jti', name: 'JWT ID', desc: '唯一标识符，用于标识和防止 token 重放' }
 ]
 
+const DEFAULT_IAT = Math.floor(Date.now() / 1000)
+
 interface JwtParts {
-  header: Record<string, any>
-  payload: Record<string, any>
+  header: Record<string, unknown>
+  payload: Record<string, unknown>
   signature: string
   raw: { header: string; payload: string; signature: string }
 }
 
 type TabType = 'header' | 'payload' | 'signature'
+
+function decodeJwtParts(rawToken: string): { parts: JwtParts | null; error: string } {
+  const segs = rawToken.trim().split('.')
+  if (segs.length !== 3) {
+    return { parts: null, error: 'JWT 格式不正确，应包含三段 (header.payload.signature)' }
+  }
+
+  try {
+    const headerStr = base64UrlDecode(segs[0])
+    const payloadStr = base64UrlDecode(segs[1])
+    const headerRaw: unknown = JSON.parse(headerStr)
+    const payloadRaw: unknown = JSON.parse(payloadStr)
+    const header = typeof headerRaw === 'object' && headerRaw !== null ? headerRaw as Record<string, unknown> : {}
+    const payload = typeof payloadRaw === 'object' && payloadRaw !== null ? payloadRaw as Record<string, unknown> : {}
+    return {
+      parts: {
+        header,
+        payload,
+        signature: segs[2],
+        raw: { header: segs[0], payload: segs[1], signature: segs[2] },
+      },
+      error: '',
+    }
+  } catch {
+    return { parts: null, error: 'Base64 解码失败，请检查 token 格式' }
+  }
+}
 
 export default function JwtDebugger() {
   const [token, setToken] = useState('')
@@ -154,6 +183,7 @@ export default function JwtDebugger() {
   const [showClaims, setShowClaims] = useState(false)
   const [copiedPart, setCopiedPart] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [parts, setParts] = useState<JwtParts | null>(null)
   const [editHeader, setEditHeader] = useState('')
   const [editPayload, setEditPayload] = useState('')
   const [headerError, setHeaderError] = useState('')
@@ -162,50 +192,31 @@ export default function JwtDebugger() {
   const [genPayload, setGenPayload] = useState(JSON.stringify({
     sub: '1234567890',
     name: 'John Doe',
-    iat: Math.floor(Date.now() / 1000)
+    iat: DEFAULT_IAT
   }, null, 2))
   const [generatedToken, setGeneratedToken] = useState('')
 
-  const parseJwt = useCallback((rawToken: string): JwtParts | null => {
-    const parts = rawToken.trim().split('.')
-    if (parts.length !== 3) {
-      setError('JWT 格式不正确，应包含三段 (header.payload.signature)')
-      return null
-    }
-
-    try {
-      const headerStr = base64UrlDecode(parts[0])
-      const payloadStr = base64UrlDecode(parts[1])
-      const header = JSON.parse(headerStr)
-      const payload = JSON.parse(payloadStr)
-
+  const handleTokenChange = useCallback((value: string) => {
+    setToken(value)
+    if (!value.trim()) {
       setError('')
-      return {
-        header,
-        payload,
-        signature: parts[2],
-        raw: { header: parts[0], payload: parts[1], signature: parts[2] }
-      }
-    } catch {
-      setError('Base64 解码失败，请检查 token 格式')
-      return null
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!token.trim()) {
-      setError('')
+      setParts(null)
       setEditHeader('')
       setEditPayload('')
       return
     }
 
-    const parts = parseJwt(token)
-    if (parts) {
-      setEditHeader(JSON.stringify(parts.header, null, 2))
-      setEditPayload(JSON.stringify(parts.payload, null, 2))
+    const decoded = decodeJwtParts(value)
+    setError(decoded.error)
+    setParts(decoded.parts)
+    if (decoded.parts) {
+      setEditHeader(JSON.stringify(decoded.parts.header, null, 2))
+      setEditPayload(JSON.stringify(decoded.parts.payload, null, 2))
+    } else {
+      setEditHeader('')
+      setEditPayload('')
     }
-  }, [token, parseJwt])
+  }, [])
 
   const handleHeaderChange = (value: string) => {
     setEditHeader(value)
@@ -235,11 +246,11 @@ export default function JwtDebugger() {
       const encodedPayload = base64UrlEncode(payload)
       const newToken = `${encodedHeader}.${encodedPayload}.[signature]`
       setGeneratedToken(newToken)
-      setToken(newToken)
+      handleTokenChange(newToken)
     } catch {
       // JSON parse error handled by individual handlers
     }
-  }, [genHeader, genPayload])
+  }, [genHeader, genPayload, handleTokenChange])
 
   const copyToClipboard = async (text: string, part: string) => {
     await navigator.clipboard.writeText(text)
@@ -247,7 +258,6 @@ export default function JwtDebugger() {
     setTimeout(() => setCopiedPart(null), 2000)
   }
 
-  const parts = token.trim() ? parseJwt(token) : null
   const expirationInfo = parts ? checkExpiration(parts.payload) : null
 
   const getStatusColor = (status: ExpirationStatus['status']) => {
@@ -704,7 +714,7 @@ export default function JwtDebugger() {
           <div className="jwt-input-header">
             <span className="jwt-input-label">粘贴 JWT Token</span>
             {token && (
-              <button className="jwt-btn-sm" onClick={() => setToken('')}>
+              <button className="jwt-btn-sm" onClick={() => handleTokenChange('')}>
                 <X size={14} /> 清空
               </button>
             )}
@@ -712,7 +722,7 @@ export default function JwtDebugger() {
           <textarea
             className="jwt-textarea"
             value={token}
-            onChange={(e) => setToken(e.target.value)}
+            onChange={(e) => handleTokenChange(e.target.value)}
             placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
             spellCheck={false}
           />

@@ -1,5 +1,5 @@
 // src/tools/datetime/CronInterpreter.tsx
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Copy, Check, AlertCircle } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/Select'
@@ -267,6 +267,7 @@ export default function CronInterpreter() {
   const [expression, setExpression] = useState('0 9 * * 1-5')
   const [nextRunCount, setNextRunCount] = useState(10)
   const [copied, setCopied] = useState(false)
+  const [now, setNow] = useState(0)
 
   // 可视化构建状态
   const [buildParts, setBuildParts] = useState<CronParts>({
@@ -309,6 +310,11 @@ export default function CronInterpreter() {
     if (!currentParts) return []
     return calculateNextRuns(currentParts, nextRunCount)
   }, [currentParts, nextRunCount])
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [])
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(currentExpression)
@@ -612,7 +618,7 @@ export default function CronInterpreter() {
               </thead>
               <tbody>
                 {nextRuns.map((date, index) => {
-                  const diff = date.getTime() - Date.now()
+                  const diff = date.getTime() - now
                   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
                   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
                   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))

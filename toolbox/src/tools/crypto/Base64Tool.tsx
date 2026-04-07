@@ -11,7 +11,7 @@ export default function Base64Tool() {
   let error = ''
   try {
     output = mode === 'encode' ? btoa(unescape(encodeURIComponent(input))) : decodeURIComponent(escape(atob(input)))
-  } catch (e: any) {
+  } catch {
     error = mode === 'decode' ? '无效的 Base64 字符串' : ''
   }
 

@@ -5,10 +5,22 @@ import ToolLayout from '../../components/ToolLayout'
 
 type Mode = 'xml2json' | 'json2xml' | 'auto'
 
+type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | JsonValue[]
+  | { [key: string]: JsonValue }
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 // ============================================================
 // XML → JSON 转换 (使用 DOMParser)
 // ============================================================
-function xmlToJson(node: Element | Document): any {
+function xmlToJson(node: Node): JsonValue {
   if (!node) return null
 
   // 文本节点
@@ -20,15 +32,16 @@ function xmlToJson(node: Element | Document): any {
   // 元素节点
   if (node.nodeType === Node.ELEMENT_NODE) {
     const elem = node as Element
-    const obj: any = {}
+    const obj: Record<string, JsonValue> = {}
 
     // 处理属性
     if (elem.attributes.length > 0) {
-      obj._attributes = {}
+      const attrObj: Record<string, JsonValue> = {}
       for (let i = 0; i < elem.attributes.length; i++) {
         const attr = elem.attributes[i]
-        obj._attributes[attr.name] = attr.value
+        attrObj[attr.name] = attr.value
       }
+      obj._attributes = attrObj
     }
 
     // 处理子节点
@@ -46,7 +59,7 @@ function xmlToJson(node: Element | Document): any {
     }
 
     // 按标签名分组
-    const groups: Record<string, any[]> = {}
+    const groups: Record<string, JsonValue[]> = {}
     for (const child of children) {
       if (child.nodeType === Node.ELEMENT_NODE) {
         const childElem = child as Element
@@ -82,7 +95,7 @@ function xmlToJson(node: Element | Document): any {
   return null
 }
 
-function parseXml(xmlString: string): any {
+function parseXml(xmlString: string): JsonValue {
   const parser = new DOMParser()
   const doc = parser.parseFromString(xmlString, 'text/xml')
   
@@ -99,7 +112,7 @@ function parseXml(xmlString: string): any {
 // ============================================================
 // JSON → XML 转换
 // ============================================================
-function jsonToXmlValue(value: any, _indent: number, _indentStr: string): string {
+function jsonToXmlValue(value: unknown): string {
   if (value === null || value === undefined) return ''
   if (typeof value === 'boolean') return String(value)
   if (typeof value === 'number') return String(value)
@@ -113,40 +126,44 @@ function jsonToXmlValue(value: any, _indent: number, _indentStr: string): string
   return ''
 }
 
-function jsonToXml(obj: any, _indent = 0, indentStr = '  '): string {
+function jsonToXml(obj: unknown, _indent = 0, indentStr = '  '): string {
   const pad = indentStr.repeat(_indent)
 
   if (obj === null || obj === undefined) return ''
-  if (typeof obj !== 'object') return jsonToXmlValue(obj, _indent, indentStr)
+  if (typeof obj !== 'object') return jsonToXmlValue(obj)
+  if (Array.isArray(obj)) {
+    return obj.map((item) => `${pad}${jsonToXml(item, _indent, indentStr)}`).join('\n')
+  }
 
   // 根对象处理
-  const keys = Object.keys(obj)
+  const rec = obj as Record<string, unknown>
+  const keys = Object.keys(rec)
   if (keys.length === 0) return ''
 
   const parts: string[] = []
 
   // 处理 _attributes (XML 属性)
-  const attributes = obj._attributes
+  const attributes = isRecord(rec._attributes) ? rec._attributes : undefined
   const attrStr = attributes 
-    ? ' ' + Object.entries(attributes).map(([k, v]) => `${k}="${v}"`).join(' ')
+    ? ' ' + Object.entries(attributes).map(([k, v]) => `${k}="${String(v)}"`).join(' ')
     : ''
 
   // 处理 _text (文本内容)
-  const text = obj._text
+  const text = rec._text
 
   // 处理子元素
   const childKeys = keys.filter((k) => k !== '_attributes' && k !== '_text')
 
   if (childKeys.length === 0 && text !== undefined) {
     // 只有文本内容
-    const textStr = jsonToXmlValue(text, _indent, indentStr)
+    const textStr = jsonToXmlValue(text)
     return textStr
   }
 
   if (childKeys.length === 1 && text === undefined) {
     // 单个子元素
     const key = childKeys[0]
-    const value = obj[key]
+    const value = rec[key]
 
     if (Array.isArray(value)) {
       // 数组
@@ -154,32 +171,32 @@ function jsonToXml(obj: any, _indent = 0, indentStr = '  '): string {
         if (typeof item === 'object' && item !== null) {
           return `${pad}<${key}${attrStr}>\n${jsonToXml(item, _indent + 1, indentStr)}\n${pad}</${key}>`
         }
-        return `${pad}<${key}${attrStr}>${jsonToXmlValue(item, _indent, indentStr)}</${key}>`
+        return `${pad}<${key}${attrStr}>${jsonToXmlValue(item)}</${key}>`
       }).join('\n')
     } else if (typeof value === 'object' && value !== null) {
       return `${pad}<${key}${attrStr}>\n${jsonToXml(value, _indent + 1, indentStr)}\n${pad}</${key}>`
     } else {
-      const valueStr = jsonToXmlValue(value, _indent, indentStr)
+      const valueStr = jsonToXmlValue(value)
       return `${pad}<${key}${attrStr}>${valueStr}</${key}>`
     }
   }
 
   // 多个子元素
   for (const key of childKeys) {
-    const value = obj[key]
+    const value = rec[key]
 
     if (Array.isArray(value)) {
       for (const item of value) {
         if (typeof item === 'object' && item !== null) {
           parts.push(`${pad}<${key}${attrStr}>\n${jsonToXml(item, _indent + 1, indentStr)}\n${pad}</${key}>`)
         } else {
-          parts.push(`${pad}<${key}${attrStr}>${jsonToXmlValue(item, _indent, indentStr)}</${key}>`)
+          parts.push(`${pad}<${key}${attrStr}>${jsonToXmlValue(item)}</${key}>`)
         }
       }
     } else if (typeof value === 'object' && value !== null) {
       parts.push(`${pad}<${key}${attrStr}>\n${jsonToXml(value, _indent + 1, indentStr)}\n${pad}</${key}>`)
     } else {
-      parts.push(`${pad}<${key}${attrStr}>${jsonToXmlValue(value, _indent, indentStr)}</${key}>`)
+      parts.push(`${pad}<${key}${attrStr}>${jsonToXmlValue(value)}</${key}>`)
     }
   }
 
@@ -200,7 +217,7 @@ function highlightJson(json: string): React.ReactNode {
       .replace(/: (true|false)/g, ': <span style="color:#569cd6">$1</span>')
       .replace(/: (null)/g, ': <span style="color:#569cd6">$1</span>')
       .replace(/: (-?\d+\.?\d*)/g, ': <span style="color:#b5cea8">$1</span>')
-      .replace(/([{}\[\]])/g, '<span style="color:#ffd700">$1</span>')
+      .replace(/(\{|\}|\[|\])/g, '<span style="color:#ffd700">$1</span>')
     
     return (
       <div key={i} dangerouslySetInnerHTML={{ __html: highlighted || '&nbsp;' }} />
@@ -269,14 +286,15 @@ export default function XmlJsonConverter() {
         setOutputType('json')
       } else {
         // JSON → XML
-        const parsed = JSON.parse(trimmed)
+        const parsed: unknown = JSON.parse(trimmed)
         const indentStr = formatted ? '  ' : ''
         const xmlStr = `<?xml version="1.0" encoding="UTF-8"?>\n${jsonToXml(parsed, 0, indentStr)}`
         setOutput(xmlStr)
         setOutputType('xml')
       }
-    } catch (e: any) {
-      setError(e.message || '转换失败')
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : '转换失败'
+      setError(msg)
       setOutput('')
     }
   }, [input, mode, formatted])

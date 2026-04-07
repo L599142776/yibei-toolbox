@@ -1,5 +1,5 @@
 // src/tools/code/ApiDocGenerator.tsx
-import { useState, useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { Copy, Download, FileText, FileCode, AlertCircle, Check } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 
@@ -25,69 +25,96 @@ interface ParsedSchema {
   requiredFields: Set<string>
 }
 
+type OpenApiSchema = Record<string, unknown>
+
+interface OpenApiComponents {
+  schemas: Record<string, OpenApiSchema>
+}
+
+interface OpenApiObjectSchema extends OpenApiSchema {
+  type: 'object'
+  properties: Record<string, OpenApiSchema>
+  required: string[]
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 // Parse JSON Schema or sample JSON into structured format
 function parseJsonInput(input: string): { schema: ParsedSchema | null; error: string } {
   try {
-    const json = JSON.parse(input)
+    const json: unknown = JSON.parse(input)
     
     // Check if it's a JSON Schema (has $schema or type)
-    if (json.$schema || (json.type === 'object' && json.properties)) {
+    if (
+      isRecord(json)
+      && (typeof json.$schema === 'string'
+        || (json.type === 'object' && isRecord(json.properties)))
+    ) {
       return parseJsonSchema(json, 'Schema')
     }
     
     // Treat as sample JSON data
     return parseSampleJson(json, 'Data')
-  } catch (e: any) {
-    return { schema: null, error: `JSON 解析错误: ${e.message}` }
+  } catch (err: unknown) {
+    return { schema: null, error: `JSON 解析错误: ${err instanceof Error ? err.message : '未知错误'}` }
   }
 }
 
-function parseJsonSchema(schema: any, name: string): { schema: ParsedSchema | null; error: string } {
+function parseJsonSchema(schema: unknown, name: string): { schema: ParsedSchema | null; error: string } {
+  if (!isRecord(schema)) return { schema: null, error: 'Schema 格式不正确' }
+
   const properties: SchemaProperty[] = []
-  const requiredFields = new Set<string>(schema.required || [])
+  const requiredFields = new Set<string>(
+    Array.isArray(schema.required) ? schema.required.filter((v): v is string => typeof v === 'string') : []
+  )
   
-  const parseProperty = (propName: string, prop: any, required: boolean): SchemaProperty => {
+  const parseProperty = (propName: string, prop: unknown, required: boolean): SchemaProperty => {
+    const p = isRecord(prop) ? prop : {}
     const property: SchemaProperty = {
       name: propName,
-      type: mapJsonSchemaType(prop.type),
-      required: required,
-      description: prop.description || prop.title,
-      format: prop.format,
+      type: mapJsonSchemaType(typeof p.type === 'string' ? p.type : undefined),
+      required,
+      description: (typeof p.description === 'string' ? p.description : undefined) || (typeof p.title === 'string' ? p.title : undefined),
+      format: typeof p.format === 'string' ? p.format : undefined,
     }
     
-    if (prop.enum) {
-      property.enum = prop.enum
+    if (Array.isArray(p.enum)) {
+      property.enum = p.enum.filter((v): v is string => typeof v === 'string')
     }
-    if (prop.default !== undefined) {
-      property.default = prop.default
+    if (p.default !== undefined) {
+      property.default = p.default
     }
     
     // Handle array items
-    if (prop.type === 'array' && prop.items) {
-      if (prop.items.properties) {
-        property.items = Object.entries(prop.items.properties).map(([key, val]: [string, any]) =>
-          parseProperty(key, val, (prop.items.required || []).includes(key))
+    if (p.type === 'array' && isRecord(p.items)) {
+      const items = p.items
+      if (isRecord(items.properties)) {
+        const req = Array.isArray(items.required) ? items.required.filter((v): v is string => typeof v === 'string') : []
+        property.items = Object.entries(items.properties).map(([key, val]) =>
+          parseProperty(key, val, req.includes(key))
         )
-      } else if (prop.items.$ref) {
-        property.type = `${mapJsonSchemaType(prop.items.type)}[]`
       } else {
-        property.type = `${mapJsonSchemaType(prop.items.type)}[]`
+        const itemType = typeof items.type === 'string' ? items.type : undefined
+        property.type = `${mapJsonSchemaType(itemType)}[]`
       }
     }
     
     // Handle nested object properties
-    if (prop.type === 'object' && prop.properties) {
-      property.properties = Object.entries(prop.properties).map(([key, val]: [string, any]) =>
-        parseProperty(key, val, (prop.required || []).includes(key))
+    if (p.type === 'object' && isRecord(p.properties)) {
+      const req = Array.isArray(p.required) ? p.required.filter((v): v is string => typeof v === 'string') : []
+      property.properties = Object.entries(p.properties).map(([key, val]) =>
+        parseProperty(key, val, req.includes(key))
       )
     }
     
     return property
   }
   
-  if (schema.properties) {
+  if (isRecord(schema.properties)) {
     for (const [key, value] of Object.entries(schema.properties)) {
-      properties.push(parseProperty(key, value as any, requiredFields.has(key)))
+      properties.push(parseProperty(key, value, requiredFields.has(key)))
     }
   }
   
@@ -97,13 +124,13 @@ function parseJsonSchema(schema: any, name: string): { schema: ParsedSchema | nu
   }
 }
 
-function parseSampleJson(data: any, name: string): { schema: ParsedSchema | null; error: string } {
+function parseSampleJson(data: unknown, name: string): { schema: ParsedSchema | null; error: string } {
   if (Array.isArray(data) && data.length > 0) {
     // Parse first item of array
     return parseSampleJson(data[0], name)
   }
   
-  if (typeof data !== 'object' || data === null) {
+  if (!isRecord(data)) {
     return { schema: null, error: '输入必须是对象或数组' }
   }
   
@@ -128,14 +155,15 @@ function parseSampleJson(data: any, name: string): { schema: ParsedSchema | null
       const itemType = inferType(value[0])
       property.type = `${mapJsonSchemaType(itemType)}[]`
       
-      if (typeof value[0] === 'object' && value[0] !== null) {
-        property.items = Object.keys(value[0]).map(k =>
-          parseValue(k, (value[0] as any)[k], false)
+      if (isRecord(value[0])) {
+        const first = value[0]
+        property.items = Object.keys(first).map(k =>
+          parseValue(k, first[k], false)
         )
       }
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (isRecord(value)) {
       property.properties = Object.keys(value).map(k =>
-        parseValue(k, (value as any)[k], false)
+        parseValue(k, value[k], false)
       )
     }
     
@@ -278,13 +306,11 @@ function generateExampleValue(prop: SchemaProperty): unknown {
 
 // Generate OpenAPI 3.0 specification
 function generateOpenApi(schema: ParsedSchema, template: TemplateStyle, includeExamples: boolean): string {
-  const components: Record<string, any> = {
-    schemas: {}
-  }
+  const components: OpenApiComponents = { schemas: {} }
   
   const schemaName = schema.name.replace(/\s+/g, '')
   
-  const openApiSchema: Record<string, any> = {
+  const openApiSchema: OpenApiObjectSchema = {
     type: 'object',
     properties: {},
     required: [],
@@ -299,7 +325,7 @@ function generateOpenApi(schema: ParsedSchema, template: TemplateStyle, includeE
   
   components.schemas[schemaName] = openApiSchema
   
-  const spec: Record<string, any> = {
+  const spec: Record<string, unknown> = {
     openapi: '3.0.0',
     info: {
       title: schema.name,
@@ -339,25 +365,25 @@ function generateOpenApi(schema: ParsedSchema, template: TemplateStyle, includeE
   return JSON.stringify(spec, null, 2)
 }
 
-function buildOpenApiProperty(prop: SchemaProperty, includeExamples: boolean): Record<string, any> {
-  const result: Record<string, any> = {}
+function buildOpenApiProperty(prop: SchemaProperty, includeExamples: boolean): OpenApiSchema {
+  const result: Record<string, unknown> = {}
   
   // Map types
   if (prop.type === 'array') {
-    result.type = 'array'
+    result['type'] = 'array'
     if (prop.items) {
-      result.items = buildOpenApiProperty(prop.items[0], includeExamples)
+      result['items'] = buildOpenApiProperty(prop.items[0], includeExamples)
     } else {
-      result.items = { type: 'string' }
+      result['items'] = { type: 'string' }
     }
   } else if (prop.type === 'object' && prop.properties) {
-    result.type = 'object'
-    result.properties = {}
-    result.required = []
+    result['type'] = 'object'
+    result['properties'] = {}
+    result['required'] = []
     for (const p of prop.properties) {
-      result.properties[p.name] = buildOpenApiProperty(p, includeExamples)
+      ;(result['properties'] as Record<string, OpenApiSchema>)[p.name] = buildOpenApiProperty(p, includeExamples)
       if (p.required) {
-        result.required.push(p.name)
+        ;(result['required'] as string[]).push(p.name)
       }
     }
   } else {
@@ -368,25 +394,25 @@ function buildOpenApiProperty(prop: SchemaProperty, includeExamples: boolean): R
       boolean: 'boolean',
       null: 'null',
     }
-    result.type = typeMap[prop.type] || 'string'
+    result['type'] = typeMap[prop.type] || 'string'
   }
   
   if (prop.format) {
-    result.format = prop.format
+    result['format'] = prop.format
   }
   if (prop.description) {
-    result.description = prop.description
+    result['description'] = prop.description
   }
   if (prop.enum) {
-    delete result.type
-    result.enum = prop.enum
+    delete result['type']
+    result['enum'] = prop.enum
   }
   if (prop.default !== undefined) {
-    result.default = prop.default
+    result['default'] = prop.default
   }
   
   if (includeExamples) {
-    result.example = generateExampleValue(prop)
+    result['example'] = generateExampleValue(prop)
   }
   
   return result
@@ -611,44 +637,22 @@ export default function ApiDocGenerator() {
   const [outputFormat, setOutputFormat] = useState<OutputFormat>('markdown')
   const [template, setTemplate] = useState<TemplateStyle>('basic')
   const [includeExamples, setIncludeExamples] = useState(true)
-  const [output, setOutput] = useState('')
-  const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
-  
-  // Generate documentation when inputs change
-  useEffect(() => {
-    if (!input.trim()) {
-      setOutput('')
-      setError('')
-      return
-    }
-    
+
+  const { output, error } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '' }
+
     const { schema, error: parseError } = parseJsonInput(input)
-    
-    if (parseError) {
-      setError(parseError)
-      setOutput('')
-      return
-    }
-    
-    if (!schema) {
-      setError('无法解析输入数据')
-      setOutput('')
-      return
-    }
-    
-    setError('')
-    
+    if (parseError) return { output: '', error: parseError }
+    if (!schema) return { output: '', error: '无法解析输入数据' }
+
     switch (outputFormat) {
       case 'markdown':
-        setOutput(generateMarkdown(schema, template, includeExamples))
-        break
+        return { output: generateMarkdown(schema, template, includeExamples), error: '' }
       case 'openapi':
-        setOutput(generateOpenApi(schema, template, includeExamples))
-        break
+        return { output: generateOpenApi(schema, template, includeExamples), error: '' }
       case 'html':
-        setOutput(generateHtml(schema, template, includeExamples))
-        break
+        return { output: generateHtml(schema, template, includeExamples), error: '' }
     }
   }, [input, outputFormat, template, includeExamples])
   
@@ -682,8 +686,6 @@ export default function ApiDocGenerator() {
   
   const handleClear = () => {
     setInput('')
-    setOutput('')
-    setError('')
   }
   
   const sampleJson = `{

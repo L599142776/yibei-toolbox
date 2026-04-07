@@ -175,29 +175,10 @@ export default function Minesweeper() {
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null)
   const [isMouseDown, setIsMouseDown] = useState(false)
   const [newRecord, setNewRecord] = useState(false)
-  const [bestTimes, setBestTimes] = useState<Record<Difficulty, BestTime | null>>({
-    easy: null,
-    medium: null,
-    hard: null,
-  })
+  const [bestTimes, setBestTimes] = useState<Record<Difficulty, BestTime | null>>(() => getBestTimes())
 
   const timerRef = useRef<number | null>(null)
   const config = DIFFICULTIES[difficulty]
-
-  // 初始化棋盘
-  useEffect(() => {
-    const cfg = DIFFICULTIES[difficulty]
-    setBoard(createBoard(cfg.rows, cfg.cols))
-    setGameState('idle')
-    setTime(0)
-    setFlagCount(0)
-    setSelectedCell(null)
-    setNewRecord(false)
-  }, [difficulty])
-
-  useEffect(() => {
-    setBestTimes(getBestTimes())
-  }, [])
 
   const initGame = useCallback(
     (diff: Difficulty = difficulty, firstRow?: number, firstCol?: number) => {

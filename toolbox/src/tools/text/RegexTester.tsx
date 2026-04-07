@@ -13,8 +13,8 @@ export default function RegexTester() {
       const re = new RegExp(pattern, flags)
       const all = [...text.matchAll(re)]
       return { matches: all, error: '' }
-    } catch (e: any) {
-      return { matches: [], error: e.message }
+    } catch (err: unknown) {
+      return { matches: [], error: err instanceof Error ? err.message : '正则表达式错误' }
     }
   }, [pattern, flags, text])
 

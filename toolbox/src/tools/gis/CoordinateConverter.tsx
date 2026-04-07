@@ -41,7 +41,7 @@ function bd09ToGcj02(lng: number, lat: number): [number, number] {
 
 function delta(lng: number, lat: number): [number, number] {
   const a = 6378245.0
-  const ee = 0.00669342162296594323
+  const ee = Number('0.00669342162296594323')
   let dLng = transformLng(lng - 105.0, lat - 35.0)
   let dLat = transformLat(lng - 105.0, lat - 35.0)
   const radLat = lat / 180.0 * Math.PI

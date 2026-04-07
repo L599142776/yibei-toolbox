@@ -6,7 +6,7 @@ function parseUA(ua: string) {
   const result: Record<string, string> = {}
 
   // Browser
-  let m = ua.match(/(Firefox|Edg|Chrome|Safari|Opera|OPR)\/?([\d.]+)?/)
+  const m = ua.match(/(Firefox|Edg|Chrome|Safari|Opera|OPR)\/?([\d.]+)?/)
   if (m) {
     const browsers: Record<string, string> = { 'Edg': 'Microsoft Edge', 'OPR': 'Opera', 'Chrome': 'Chrome', 'Firefox': 'Firefox', 'Safari': 'Safari', 'Opera': 'Opera' }
     result['浏览器'] = browsers[m[1]] || m[1] + (m[2] ? ` ${m[2]}` : '')

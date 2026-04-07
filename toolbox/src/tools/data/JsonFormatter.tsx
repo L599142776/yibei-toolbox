@@ -1,5 +1,5 @@
 // src/tools/data/JsonFormatter.tsx
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Copy, Minimize2 } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/Select'
@@ -7,24 +7,25 @@ import Select from '../../components/Select'
 export default function JsonFormatter() {
   const [input, setInput] = useState('')
   const [indent, setIndent] = useState(2)
-  const [error, setError] = useState('')
 
-  let output = ''
-  try {
-    if (input.trim()) {
-      const parsed = JSON.parse(input)
-      output = JSON.stringify(parsed, null, indent)
-      setError('')
+  const { output, error } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '' }
+    try {
+      const parsed: unknown = JSON.parse(input)
+      return { output: JSON.stringify(parsed, null, indent), error: '' }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'JSON 解析失败'
+      return { output: '', error: msg }
     }
-  } catch (e: any) {
-    setError(e.message)
-  }
+  }, [input, indent])
 
   const minify = () => {
     try {
-      const parsed = JSON.parse(input)
+      const parsed: unknown = JSON.parse(input)
       setInput(JSON.stringify(parsed))
-    } catch {}
+    } catch {
+      setInput(v => v)
+    }
   }
 
   return (

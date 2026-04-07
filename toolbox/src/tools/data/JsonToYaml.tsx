@@ -4,7 +4,7 @@ import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 
 // 轻量 JSON↔YAML (简单场景，不需要引入重依赖)
-function jsonToYaml(obj: any, indent = 0): string {
+function jsonToYaml(obj: unknown, indent = 0): string {
   const pad = '  '.repeat(indent)
   if (obj === null) return 'null'
   if (typeof obj === 'boolean') return String(obj)
@@ -26,10 +26,11 @@ function jsonToYaml(obj: any, indent = 0): string {
     }).join('\n')
   }
   if (typeof obj === 'object') {
-    const keys = Object.keys(obj)
+    const rec = obj as Record<string, unknown>
+    const keys = Object.keys(rec)
     if (keys.length === 0) return '{}'
     return keys.map((k) => {
-      const v = obj[k]
+      const v = rec[k]
       if (typeof v === 'object' && v !== null) {
         return `${pad}${k}:\n${jsonToYaml(v, indent + 1)}`
       }
@@ -54,20 +55,24 @@ export default function JsonToYaml() {
       } else {
         // 简易 YAML → JSON (基本格式)
         const lines = input.split('\n')
-        const result: Record<string, any> = {}
+        const result: Record<string, unknown> = {}
         for (const line of lines) {
           const match = line.match(/^(\s*)([\w.-]+):\s*(.*)$/)
           if (match) {
             const [, , key, val] = match
             if (val === '') continue
-            try { result[key] = JSON.parse(val) } catch { result[key] = val }
+            try {
+              result[key] = JSON.parse(val) as unknown
+            } catch {
+              result[key] = val
+            }
           }
         }
         output = JSON.stringify(result, null, 2)
       }
     }
-  } catch (e: any) {
-    error = e.message
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : '转换失败'
   }
 
   return (

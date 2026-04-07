@@ -123,14 +123,12 @@ export default function RegexCheatsheet() {
   const [testInput, setTestInput] = useState('')
   const [testPattern, setTestPattern] = useState('')
   const [testFlags, setTestFlags] = useState('g')
-  const [testError, setTestError] = useState('')
 
   const currentCategory = PATTERNS.find((c) => c.id === selectedCategory)
 
-  const testMatches = useMemo(() => {
+  const { matches: testMatches, error: testError } = useMemo(() => {
     if (!testPattern || !testInput) {
-      setTestError('')
-      return []
+      return { matches: [] as { text: string; index: number; groups: string[] }[], error: '' }
     }
     try {
       const re = new RegExp(testPattern, testFlags)
@@ -139,11 +137,9 @@ export default function RegexCheatsheet() {
         index: m.index ?? 0,
         groups: m.slice(1),
       }))
-      setTestError('')
-      return matches
-    } catch (e: any) {
-      setTestError(e.message)
-      return []
+      return { matches, error: '' }
+    } catch (err: unknown) {
+      return { matches: [], error: err instanceof Error ? err.message : '正则表达式错误' }
     }
   }, [testPattern, testInput, testFlags])
 

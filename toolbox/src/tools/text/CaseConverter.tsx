@@ -10,9 +10,9 @@ const cases: { id: CaseType; label: string; fn: (s: string) => string }[] = [
   { id: 'lower', label: 'lower case', fn: (s) => s.toLowerCase() },
   { id: 'capitalize', label: 'Capitalize', fn: (s) => s.replace(/\b\w/g, (c) => c.toUpperCase()) },
   { id: 'camel', label: 'camelCase', fn: (s) => s.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase()) },
-  { id: 'snake', label: 'snake_case', fn: (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s\-]+/g, '_').toLowerCase() },
+  { id: 'snake', label: 'snake_case', fn: (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s-]+/g, '_').toLowerCase() },
   { id: 'kebab', label: 'kebab-case', fn: (s) => s.replace(/([a-z])([A-Z])/g, '$1-$2').replace(/[\s_]+/g, '-').toLowerCase() },
-  { id: 'constant', label: 'CONSTANT_CASE', fn: (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s\-]+/g, '_').toUpperCase() },
+  { id: 'constant', label: 'CONSTANT_CASE', fn: (s) => s.replace(/([a-z])([A-Z])/g, '$1_$2').replace(/[\s-]+/g, '_').toUpperCase() },
 ]
 
 export default function CaseConverter() {

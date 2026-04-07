@@ -3,6 +3,10 @@ import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
 export default function JsonToCsv() {
   const [input, setInput] = useState('')
   const [mode, setMode] = useState<'json2csv' | 'csv2json'>('json2csv')
@@ -13,12 +17,13 @@ export default function JsonToCsv() {
   try {
     if (input.trim()) {
       if (mode === 'json2csv') {
-        const data = JSON.parse(input)
-        const arr = Array.isArray(data) ? data : [data]
+        const data: unknown = JSON.parse(input)
+        const arr: unknown[] = Array.isArray(data) ? data : [data]
         if (arr.length > 0) {
-          const headers = [...new Set(arr.flatMap((r: any) => Object.keys(r)))]
-          const rows = arr.map((r: any) => headers.map((h) => {
-            const v = r[h] ?? ''
+          const headers = [...new Set(arr.flatMap((r) => isRecord(r) ? Object.keys(r) : []))]
+          const rows = arr.map((r) => headers.map((h) => {
+            const rec = isRecord(r) ? r : {}
+            const v = rec[h] ?? ''
             const s = typeof v === 'object' ? JSON.stringify(v) : String(v)
             return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s
           }).join(','))
@@ -38,8 +43,8 @@ export default function JsonToCsv() {
         }
       }
     }
-  } catch (e: any) {
-    error = e.message
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : '转换失败'
   }
 
   return (

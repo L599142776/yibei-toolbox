@@ -28,20 +28,14 @@ export default function Timezone() {
   let results: { tz: string; label: string; time: string }[] = []
 
   if (date && time) {
-    try {
-      const dt = new Date(`${date}T${time}`)
-      results = timezones.map((tz) => {
-        try {
-          return {
-            tz: tz.id,
-            label: tz.label,
-            time: dt.toLocaleString('zh-CN', { timeZone: tz.id, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', weekday: 'short' }),
-          }
-        } catch {
-          return { tz: tz.id, label: tz.label, time: '—' }
-        }
-      })
-    } catch {}
+    const dt = new Date(`${date}T${time}`)
+    if (!Number.isNaN(dt.getTime())) {
+      results = timezones.map((tz) => ({
+        tz: tz.id,
+        label: tz.label,
+        time: dt.toLocaleString('zh-CN', { timeZone: tz.id, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', weekday: 'short' }),
+      }))
+    }
   }
 
   return (

@@ -37,8 +37,8 @@ export default function HttpTester() {
       const text = await res.text()
       const hdrStr = Array.from(res.headers.entries()).map(([k, v]) => `${k}: ${v}`).join('\n')
       setResponse({ status: res.status, statusText: res.statusText, headers: hdrStr, body: text, time: Math.round(performance.now() - start) })
-    } catch (e: any) {
-      setError(e.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '请求失败')
     } finally {
       setLoading(false)
     }

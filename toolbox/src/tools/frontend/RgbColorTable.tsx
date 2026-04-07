@@ -1,5 +1,5 @@
 // src/tools/frontend/RgbColorTable.tsx
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Copy, Search, Palette, Star, X, RotateCcw, Check } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 
@@ -676,21 +676,19 @@ export default function RgbColorTable() {
   const [hexInput, setHexInput] = useState('#6366f1')
   const [rgbInput, setRgbInput] = useState('rgb(99, 102, 241)')
   const [hslInput, setHslInput] = useState('hsl(239, 84%, 67%)')
-  const [savedColors, setSavedColors] = useState<string[]>([])
+  const [savedColors, setSavedColors] = useState<string[]>(() => {
+    const saved = localStorage.getItem('saved-colors')
+    if (!saved) return []
+    try {
+      const parsed: unknown = JSON.parse(saved)
+      if (!Array.isArray(parsed)) return []
+      return parsed.filter((c): c is string => typeof c === 'string')
+    } catch {
+      return []
+    }
+  })
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null)
   const [copiedColor, setCopiedColor] = useState<string | null>(null)
-
-  // Load saved colors from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('saved-colors')
-    if (saved) {
-      try {
-        setSavedColors(JSON.parse(saved))
-      } catch {
-        // ignore parse errors
-      }
-    }
-  }, [])
 
   // Save colors to localStorage
   const saveColors = (colors: string[]) => {

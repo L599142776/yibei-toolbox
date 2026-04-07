@@ -70,8 +70,8 @@ export default function CodeFormatter() {
   let error = ''
   try {
     if (input.trim()) output = formatCode(input, lang)
-  } catch (e: any) {
-    error = e.message
+  } catch (err: unknown) {
+    error = err instanceof Error ? err.message : '格式化失败'
   }
 
   return (

@@ -19,16 +19,40 @@ export default function DnsLookup() {
     setResults([])
     try {
       const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(domain)}&type=${type}`)
-      const data = await res.json()
-      if (data.Answer) {
-        setResults(data.Answer.map((a: any) => `${a.type === 1 ? 'A' : a.type === 28 ? 'AAAA' : a.type === 5 ? 'CNAME' : a.type === 15 ? 'MX' : a.type === 16 ? 'TXT' : a.type}: ${a.data}`))
-      } else if (data.Authority) {
-        setResults(['无直接记录，由以下 NS 负责:', ...data.Authority.map((a: any) => `${a.name} → ${a.data}`)])
+      const raw: unknown = await res.json()
+      const data = typeof raw === 'object' && raw !== null ? raw as Record<string, unknown> : {}
+      const answer = Array.isArray(data.Answer) ? data.Answer : null
+      const authority = Array.isArray(data.Authority) ? data.Authority : null
+
+      if (answer) {
+        setResults(answer.map((item) => {
+          const a = typeof item === 'object' && item !== null ? item as Record<string, unknown> : {}
+          const typeNum = typeof a.type === 'number' ? a.type : Number(a.type)
+          const dataStr = typeof a.data === 'string' ? a.data : String(a.data ?? '')
+          const typeLabel =
+            typeNum === 1 ? 'A'
+              : typeNum === 28 ? 'AAAA'
+                : typeNum === 5 ? 'CNAME'
+                  : typeNum === 15 ? 'MX'
+                    : typeNum === 16 ? 'TXT'
+                      : String(a.type ?? typeNum)
+          return `${typeLabel}: ${dataStr}`
+        }))
+      } else if (authority) {
+        setResults([
+          '无直接记录，由以下 NS 负责:',
+          ...authority.map((item) => {
+            const a = typeof item === 'object' && item !== null ? item as Record<string, unknown> : {}
+            const name = typeof a.name === 'string' ? a.name : String(a.name ?? '')
+            const dataStr = typeof a.data === 'string' ? a.data : String(a.data ?? '')
+            return `${name} → ${dataStr}`
+          }),
+        ])
       } else {
         setResults(['无结果'])
       }
-    } catch (e: any) {
-      setError(e.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '查询失败')
     } finally {
       setLoading(false)
     }

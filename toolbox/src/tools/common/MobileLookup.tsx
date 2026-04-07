@@ -644,7 +644,7 @@ export default function MobileLookup() {
         const updatedHistory = [...newHistory, ...filteredHistory].slice(0, 50)
         saveHistory(updatedHistory)
       }
-    } catch (err) {
+    } catch {
       setError('查询失败，请稍后重试')
     } finally {
       setLoading(false)

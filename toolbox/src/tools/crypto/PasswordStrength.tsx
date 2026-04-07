@@ -28,6 +28,15 @@ interface StrengthResult {
   suggestions: string[]
 }
 
+const SPECIAL_CHARS = "!@#$%^&*()_+-=[]{};':\"\\|,.<>/?"
+
+function hasSpecialChar(password: string): boolean {
+  for (const ch of password) {
+    if (SPECIAL_CHARS.includes(ch)) return true
+  }
+  return false
+}
+
 function calculateStrength(password: string): StrengthResult {
   const criteria: Criteria = {
     length8: password.length >= 8,
@@ -35,7 +44,7 @@ function calculateStrength(password: string): StrengthResult {
     uppercase: /[A-Z]/.test(password),
     lowercase: /[a-z]/.test(password),
     number: /[0-9]/.test(password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    special: hasSpecialChar(password),
     noSequence: !hasSequence(password),
     noCommon: !isCommonPassword(password)
   }
