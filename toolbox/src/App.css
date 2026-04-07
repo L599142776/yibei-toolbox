@@ -347,7 +347,7 @@ body {
 /* ─── Main Content ─── */
 .main {
   flex: 1;
-  max-width: 1200px;
+  /*max-width: 1200px;*/
   width: 100%;
   margin: 0 auto;
   padding: 32px;
@@ -1226,11 +1226,11 @@ body {
   .hero-title {
     font-size: 32px;
   }
-  
+
   .hero-stats {
     gap: 32px;
   }
-  
+
   .hero-stat-value {
     font-size: 28px;
   }
@@ -1240,15 +1240,15 @@ body {
   :root {
     --sidebar-width: 280px;
   }
-  
+
   .menu-btn {
     display: flex;
   }
-  
+
   .logo-text {
     display: none;
   }
-  
+
   .sidebar {
     position: fixed;
     top: 0;
@@ -1258,11 +1258,11 @@ body {
     transition: transform 0.3s ease;
     z-index: 200;
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
   .sidebar-overlay {
     display: block;
     position: fixed;
@@ -1274,63 +1274,63 @@ body {
     z-index: 150;
     animation: fadeIn 0.3s ease;
   }
-  
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  
+
   .main {
     padding: 20px 16px;
     padding-bottom: calc(var(--bottom-nav-height) + 20px);
   }
-  
+
   .bottom-nav {
     display: flex;
   }
-  
+
   .category-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
   }
-  
+
   .tool-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .hero-section {
     padding: 32px 0 48px;
   }
-  
+
   .hero-title {
     font-size: 28px;
   }
-  
+
   .hero-subtitle {
     font-size: 15px;
   }
-  
+
   .hero-stats {
     gap: 24px;
   }
-  
+
   .hero-stat-value {
     font-size: 24px;
   }
-  
+
   .quick-actions {
     grid-template-columns: 1fr;
   }
-  
+
   .tool-title {
     font-size: 22px;
   }
-  
+
   .tool-content {
     padding: 20px;
   }
-  
+
   .theme-toggle-btn span {
     display: none;
   }
@@ -1340,33 +1340,33 @@ body {
   .header {
     padding: 0 16px;
   }
-  
+
   .search-input-wrap {
     padding: 8px 12px;
   }
-  
+
   .search-input-wrap input {
     font-size: 14px;
   }
-  
+
   .search-kbd {
     display: none;
   }
-  
+
   .category-card {
     padding: 20px 16px;
   }
-  
+
   .category-card-icon {
     width: 44px;
     height: 44px;
     border-radius: 12px;
   }
-  
+
   .tool-card {
     padding: 18px;
   }
-  
+
   .tool-card-icon {
     width: 40px;
     height: 40px;
@@ -1425,7 +1425,7 @@ body {
 
 @keyframes cursor-glow-pulse {
   0%, 100% {
-    box-shadow: 
+    box-shadow:
       0 0 8px var(--cursor-color, #6366f1),
       0 0 16px var(--cursor-color, #6366f1),
       0 0 32px color-mix(in srgb, var(--cursor-color, #6366f1) 60%, transparent),
@@ -1433,7 +1433,7 @@ body {
     transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 12px var(--cursor-color, #6366f1),
       0 0 24px var(--cursor-color, #6366f1),
       0 0 48px color-mix(in srgb, var(--cursor-color, #6366f1) 70%, transparent),
@@ -2051,23 +2051,23 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { 
-    transform: translateY(0) scale(1); 
+  0%, 100% {
+    transform: translateY(0) scale(1);
     opacity: 0.6;
   }
-  50% { 
-    transform: translateY(-20px) scale(1.2); 
+  50% {
+    transform: translateY(-20px) scale(1.2);
     opacity: 1;
   }
 }
 
 @keyframes pulse {
-  0%, 100% { 
-    transform: translate(-50%, -50%) scale(1); 
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
     opacity: 0.5;
   }
-  50% { 
-    transform: translate(-50%, -50%) scale(1.2); 
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
     opacity: 0.8;
   }
 }
