@@ -88,7 +88,7 @@ export default function ShapefileConverter() {
       const processedData = processData(tableData, rules, columns)
       setTableData(processedData)
       // 处理完成后清空规则
-      clearRules()
+      // clearRules()
       alert('处理完成！')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '处理失败')
