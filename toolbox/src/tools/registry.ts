@@ -227,6 +227,16 @@ const toolModules: ToolManifest[] = [
     path: '/data/json-to-yaml',
     component: lazy(() => import('./data/JsonToYaml')),
   },
+  {
+    id: 'data-processor',
+    name: '数据批量整理',
+    description: '支持 Excel、Shapefile、CSV、JSON 文件的数据批量整理，可添加多条处理规则进行值替换',
+    category: 'data',
+    icon: 'Table2',
+    keywords: ['数据', 'excel', 'shapefile', 'csv', '批量', '替换', '整理', 'processor'],
+    path: '/data/data-processor',
+    component: lazy(() => import('./data-processor')),
+  },
 
   // ── 时间日期 ──
   {

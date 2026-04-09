@@ -3,6 +3,8 @@ import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Copy, Check, AlertCircle } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/Select'
+import DataTable from '../../components/DataTable'
+import type { ColumnDef } from '@tanstack/react-table'
 
 // ============================================================
 // 类型定义
@@ -316,6 +318,56 @@ export default function CronInterpreter() {
     return () => window.clearInterval(id)
   }, [])
 
+  type RunRow = { index: number; time: string; relative: string }
+
+  const runRows = useMemo<RunRow[]>(() => {
+    return nextRuns.map((date, index) => {
+      const diff = date.getTime() - now
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+
+      let relativeTime = ''
+      if (days > 0) relativeTime = `${days} 天后`
+      else if (hours > 0) relativeTime = `${hours} 小时后`
+      else if (minutes > 0) relativeTime = `${minutes} 分钟后`
+      else relativeTime = '即将执行'
+
+      return {
+        index: index + 1,
+        time: date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+        relative: relativeTime,
+      }
+    })
+  }, [nextRuns, now])
+
+  const runColumns = useMemo<ColumnDef<RunRow>[]>(() => {
+    return [
+      {
+        accessorKey: 'index',
+        header: '#',
+        size: 60,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ color: 'var(--text-dim)' }}>{String(getValue() ?? '')}</span>,
+      },
+      {
+        accessorKey: 'time',
+        header: '时间',
+        size: 240,
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span>,
+      },
+      {
+        accessorKey: 'relative',
+        header: '相对时间',
+        size: 140,
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ color: '#10b981' }}>{String(getValue() ?? '')}</span>,
+      },
+    ]
+  }, [])
+
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(currentExpression)
     setCopied(true)
@@ -607,40 +659,8 @@ export default function CronInterpreter() {
               />
             </div>
           </div>
-          <div className="tool-output">
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--text-dim)', fontWeight: 500 }}>#</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--text-dim)', fontWeight: 500 }}>时间</th>
-                  <th style={{ textAlign: 'left', padding: '8px 0', color: 'var(--text-dim)', fontWeight: 500 }}>相对时间</th>
-                </tr>
-              </thead>
-              <tbody>
-                {nextRuns.map((date, index) => {
-                  const diff = date.getTime() - now
-                  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-                  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-                  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-                  
-                  let relativeTime = ''
-                  if (days > 0) relativeTime = `${days} 天后`
-                  else if (hours > 0) relativeTime = `${hours} 小时后`
-                  else if (minutes > 0) relativeTime = `${minutes} 分钟后`
-                  else relativeTime = '即将执行'
-
-                  return (
-                    <tr key={index} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '8px 0', color: 'var(--text-dim)' }}>{index + 1}</td>
-                      <td style={{ padding: '8px 0', fontFamily: 'monospace' }}>
-                        {date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}
-                      </td>
-                      <td style={{ padding: '8px 0', color: '#10b981' }}>{relativeTime}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div className="tool-output" style={{ padding: 0, background: 'transparent', border: 'none' }}>
+            <DataTable data={runRows} columns={runColumns} maxHeight={360} rowHeight={36} headerHeight={40} />
           </div>
         </div>
       )}

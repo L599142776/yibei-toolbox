@@ -1,7 +1,9 @@
 // src/tools/data/CsvExcelConverter.tsx
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useMemo, useRef } from 'react'
 import { Upload, Download, FileSpreadsheet, FileText, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import DataTable from '../../components/DataTable'
+import type { ColumnDef } from '@tanstack/react-table'
 
 // Types
 interface ParsedSheet {
@@ -703,6 +705,55 @@ export default function CsvExcelConverter() {
   // Pagination
   const totalPages = Math.max(1, Math.ceil(previewData.length / PAGE_SIZE))
   const paginatedData = previewData.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+  const previewTableRows = useMemo(() => {
+    return paginatedData.map((row, rowIdx) => {
+      const record: Record<string, unknown> = { __rowNumber: page * PAGE_SIZE + rowIdx + 1 }
+      if (previewHeaders.length > 0) {
+        for (let colIdx = 0; colIdx < previewHeaders.length; colIdx++) {
+          record[`col_${colIdx}`] = row[colIdx] ?? ''
+        }
+      } else {
+        record['data'] = row.join(delimiter === '\t' ? '    ' : delimiter)
+      }
+      return record
+    })
+  }, [delimiter, page, paginatedData, previewHeaders.length])
+
+  const previewTableColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
+    const cols: ColumnDef<Record<string, unknown>>[] = [
+      {
+        accessorKey: '__rowNumber',
+        header: '#',
+        size: 60,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ color: 'var(--text-dim)' }}>{String(getValue() ?? '')}</span>,
+      },
+    ]
+
+    if (previewHeaders.length > 0) {
+      cols.push(
+        ...previewHeaders.map((h, i) => ({
+          accessorKey: `col_${i}`,
+          header: h || `列${i + 1}`,
+          size: 140,
+          enableSorting: false,
+          cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span>,
+        })) as ColumnDef<Record<string, unknown>>[]
+      )
+    } else {
+      cols.push({
+        accessorKey: 'data',
+        header: '数据',
+        size: 400,
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span>,
+      })
+    }
+
+    return cols
+  }, [previewHeaders])
   
   // Download handlers
   const handleDownload = () => {
@@ -966,120 +1017,15 @@ export default function CsvExcelConverter() {
               {mode === 'csv2xlsx' && hasHeader && previewHeaders.length > 0 && ' — 首行作为表头'}
             </span>
           </div>
-          
-          <div style={{ 
-            overflowX: 'auto',
-            border: '1px solid var(--border-color)',
-            borderRadius: 8,
-            maxHeight: 400,
-            overflow: 'auto'
-          }}>
-            <table style={{ 
-              width: '100%', 
-              borderCollapse: 'collapse',
-              fontSize: 12,
-              fontFamily: 'monospace'
-            }}>
-              <thead>
-                <tr>
-                  <th style={{ 
-                    position: 'sticky', 
-                    top: 0, 
-                    background: 'var(--bg-secondary)',
-                    padding: '8px 12px',
-                    textAlign: 'left',
-                    borderBottom: '1px solid var(--border-color)',
-                    fontWeight: 600,
-                    width: 50,
-                    minWidth: 50
-                  }}>
-                    #
-                  </th>
-                  {previewHeaders.length > 0 ? previewHeaders.map((h, i) => (
-                    <th key={i} style={{ 
-                      position: 'sticky', 
-                      top: 0, 
-                      background: 'var(--bg-secondary)',
-                      padding: '8px 12px',
-                      textAlign: 'left',
-                      borderBottom: '1px solid var(--border-color)',
-                      borderLeft: '1px solid var(--border-color)',
-                      fontWeight: 600,
-                      minWidth: 100
-                    }}>
-                      {h || `列${i + 1}`}
-                    </th>
-                  )) : (
-                    <th style={{ 
-                      position: 'sticky', 
-                      top: 0, 
-                      background: 'var(--bg-secondary)',
-                      padding: '8px 12px',
-                      textAlign: 'left',
-                      borderBottom: '1px solid var(--border-color)'
-                    }}>
-                      数据
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedData.length > 0 ? paginatedData.map((row, rowIdx) => (
-                  <tr key={rowIdx} style={{ background: rowIdx % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' }}>
-                    <td style={{ 
-                      padding: '6px 12px',
-                      borderBottom: '1px solid var(--border-color)',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      {page * PAGE_SIZE + rowIdx + 1}
-                    </td>
-                    {previewHeaders.length > 0 ? (
-                      row.length > 0 ? row.map((cell, colIdx) => (
-                        <td key={colIdx} style={{ 
-                          padding: '6px 12px',
-                          borderBottom: '1px solid var(--border-color)',
-                          borderLeft: '1px solid var(--border-color)',
-                          maxWidth: 200,
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {cell}
-                        </td>
-                      )) : (
-                        <td style={{ 
-                          padding: '6px 12px',
-                          borderBottom: '1px solid var(--border-color)',
-                          color: 'var(--text-secondary)',
-                          fontStyle: 'italic'
-                        }}>
-                          (空行)
-                        </td>
-                      )
-                    ) : (
-                      <td style={{ 
-                        padding: '6px 12px',
-                        borderBottom: '1px solid var(--border-color)',
-                        whiteSpace: 'pre-wrap'
-                      }}>
-                        {row.join(delimiter === '\t' ? '    ' : delimiter)}
-                      </td>
-                    )}
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan={previewHeaders.length > 0 ? previewHeaders.length + 1 : 2} style={{ 
-                      padding: '20px',
-                      textAlign: 'center',
-                      color: 'var(--text-secondary)'
-                    }}>
-                      暂无数据
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+
+          <DataTable
+            data={previewTableRows}
+            columns={previewTableColumns}
+            maxHeight={400}
+            rowHeight={32}
+            headerHeight={40}
+            getRowStyle={(_, rowIndex) => ({ background: rowIndex % 2 === 0 ? 'transparent' : 'var(--bg-secondary)' })}
+          />
           
           {/* Pagination */}
           {totalPages > 1 && (

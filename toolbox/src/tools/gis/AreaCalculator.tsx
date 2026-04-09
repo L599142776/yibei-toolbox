@@ -3,10 +3,12 @@ import { MapContainer, TileLayer, Polygon as LeafletPolygon, Polyline, useMapEve
 import * as turf from '@turf/turf'
 import type { LatLngExpression, LeafletMouseEvent } from 'leaflet'
 import ToolLayout from '../../components/ToolLayout'
+import DataTable from '../../components/DataTable'
 import TileLayerSelector from './TileLayerSelector'
 import { OSM_TILE_URL } from './tianditu'
 import type { TiandituConfig } from './tianditu'
 import 'leaflet/dist/leaflet.css'
+import type { ColumnDef } from '@tanstack/react-table'
 
 type Point = [number, number] // [lng, lat]
 
@@ -188,6 +190,42 @@ export default function AreaCalculator() {
 
   const COLORS = ['#6366f1', '#ef4444', '#10b981', '#f59e0b', '#ec4899', '#06b6d4', '#8b5cf6']
 
+  type DetailRow = { idx: number; color: string; vertices: number; areaKm2: string; areaMu: string; perimeterKm: string }
+
+  const detailRows = useMemo<DetailRow[]>(() => {
+    if (!allResults) return []
+    return allResults.details.map((d, i) => ({
+      idx: i + 1,
+      color: COLORS[i % COLORS.length],
+      vertices: d.vertices,
+      areaKm2: d.area_km2.toFixed(6),
+      areaMu: (d.area_km2 * 100 / 0.0666667).toFixed(2),
+      perimeterKm: d.perimeter_km.toFixed(4),
+    }))
+  }, [COLORS, allResults])
+
+  const detailColumns = useMemo<ColumnDef<DetailRow>[]>(() => {
+    return [
+      {
+        accessorKey: 'idx',
+        header: '#',
+        size: 70,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+        cell: ({ row, getValue }) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center', width: '100%' }}>
+            <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: row.original.color }} />
+            {String(getValue() ?? '')}
+          </div>
+        ),
+      },
+      { accessorKey: 'vertices', header: '顶点数', size: 90, enableSorting: false, meta: { align: 'center' } },
+      { accessorKey: 'areaKm2', header: '面积 (km²)', size: 140, enableSorting: false, meta: { align: 'right' }, cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span> },
+      { accessorKey: 'areaMu', header: '面积 (亩)', size: 120, enableSorting: false, meta: { align: 'right' }, cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span> },
+      { accessorKey: 'perimeterKm', header: '周长 (km)', size: 120, enableSorting: false, meta: { align: 'right' }, cell: ({ getValue }) => <span style={{ fontFamily: 'monospace' }}>{String(getValue() ?? '')}</span> },
+    ]
+  }, [])
+
   return (
     <ToolLayout title="多边形面积计算" description="地图绘制 / 坐标输入 / WKT 导入，实时计算面积和周长">
       {/* 底图选择器 */}
@@ -295,31 +333,7 @@ export default function AreaCalculator() {
           {allResults.details.length > 1 && (
             <div style={{ background: 'var(--bg-input)', borderRadius: 8, padding: '16px' }}>
               <div className="tool-label" style={{ marginBottom: 8 }}>各多边形明细</div>
-              <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--text-dim)' }}>#</th>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--text-dim)' }}>顶点数</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text-dim)' }}>面积 (km²)</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text-dim)' }}>面积 (亩)</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text-dim)' }}>周长 (km)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {allResults.details.map((d, i) => (
-                    <tr key={i} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '6px 8px' }}>
-                        <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: '50%', background: COLORS[i % COLORS.length], marginRight: 6 }} />
-                        {i + 1}
-                      </td>
-                      <td style={{ padding: '6px 8px' }}>{d.vertices}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{d.area_km2.toFixed(6)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{(d.area_km2 * 100 / 0.0666667).toFixed(2)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'monospace' }}>{d.perimeter_km.toFixed(4)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DataTable data={detailRows} columns={detailColumns} maxHeight={260} rowHeight={34} headerHeight={40} />
             </div>
           )}
         </>

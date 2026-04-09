@@ -1,7 +1,9 @@
 // src/tools/common/RandomDataGenerator.tsx
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { Copy, RefreshCw, Check } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import DataTable from '../../components/DataTable'
+import type { ColumnDef } from '@tanstack/react-table'
 
 // ============ Generator Functions ============
 
@@ -163,6 +165,74 @@ export default function RandomDataGenerator() {
     setTimeout(() => setCopiedAll(false), 1500)
   }, [results])
 
+  const resultTableRows = useMemo(() => {
+    return results.map((row, index) => {
+      const rec: Record<string, unknown> = { __idx: index + 1 }
+      for (let i = 0; i < selectedTypes.length; i++) {
+        rec[`col_${i}`] = row[i] ?? ''
+      }
+      return rec
+    })
+  }, [results, selectedTypes.length])
+
+  const resultTableColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
+    const cols: ColumnDef<Record<string, unknown>>[] = [
+      {
+        accessorKey: '__idx',
+        header: '#',
+        size: 60,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+        cell: ({ getValue }) => <span style={{ color: 'var(--text-secondary)' }}>{String(getValue() ?? '')}</span>,
+      },
+    ]
+
+    cols.push(
+      ...selectedTypes.map((type, i) => {
+        const config = DATA_TYPES.find(d => d.id === type)
+        return {
+          accessorKey: `col_${i}`,
+          header: config?.label ?? type,
+          size: 160,
+          enableSorting: false,
+          cell: ({ getValue }) => <span style={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{String(getValue() ?? '')}</span>,
+        } satisfies ColumnDef<Record<string, unknown>>
+      })
+    )
+
+    cols.push({
+      id: '__actions__',
+      header: () => <div style={{ width: '100%', textAlign: 'right' }}>操作</div>,
+      size: 110,
+      enableSorting: false,
+      meta: { align: 'right' },
+      cell: ({ row }) => {
+        const idx = row.index
+        return (
+          <button
+            onClick={() => copyRow(idx)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: copiedIndex === idx ? 'var(--success)' : 'var(--text-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              fontSize: 11,
+              marginLeft: 'auto',
+            }}
+          >
+            {copiedIndex === idx ? <Check size={12} /> : <Copy size={12} />}
+            {copiedIndex === idx ? '已复制' : '复制'}
+          </button>
+        )
+      },
+    })
+
+    return cols
+  }, [copiedIndex, copyRow, selectedTypes])
+
   return (
     <ToolLayout title="随机数据生成器" description="生成 Mock 测试数据，支持姓名、邮箱、手机号、地址等多种类型">
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 20, minHeight: 500 }}>
@@ -263,60 +333,17 @@ export default function RandomDataGenerator() {
                 点击"生成数据"开始生成
               </div>
             ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                <thead>
-                  <tr style={{ background: 'var(--bg-secondary)' }}>
-                    <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500, position: 'sticky', top: 0, background: 'var(--bg-secondary)' }}>#</th>
-                    {selectedTypes.map(type => {
-                      const config = DATA_TYPES.find(d => d.id === type)
-                      return (
-                        <th key={type} style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 500, position: 'sticky', top: 0, background: 'var(--bg-secondary)', whiteSpace: 'nowrap' }}>
-                          {config?.label}
-                        </th>
-                      )
-                    })}
-                    <th style={{ padding: '8px 12px', textAlign: 'right', position: 'sticky', top: 0, background: 'var(--bg-secondary)' }}>操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((row, index) => (
-                    <tr
-                      key={index}
-                      style={{
-                        borderBottom: '1px solid var(--border)',
-                        transition: 'background 0.15s',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-hover)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                    >
-                      <td style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>{index + 1}</td>
-                      {row.map((cell, cellIndex) => (
-                        <td key={cellIndex} style={{ padding: '8px 12px', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
-                          {cell}
-                        </td>
-                      ))}
-                      <td style={{ padding: '8px 12px', textAlign: 'right' }}>
-                        <button
-                          onClick={() => copyRow(index)}
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            color: copiedIndex === index ? 'var(--success)' : 'var(--text-secondary)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 4,
-                            fontSize: 11,
-                          }}
-                        >
-                          {copiedIndex === index ? <Check size={12} /> : <Copy size={12} />}
-                          {copiedIndex === index ? '已复制' : '复制'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DataTable
+                data={resultTableRows}
+                columns={resultTableColumns}
+                maxHeight={560}
+                rowHeight={36}
+                headerHeight={40}
+                getRowStyle={(_, rowIndex) => ({
+                  borderBottom: '1px solid var(--border)',
+                  background: rowIndex % 2 === 0 ? 'transparent' : 'rgba(128,128,128,0.02)',
+                })}
+              />
             )}
           </div>
         </div>

@@ -1,10 +1,17 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
-import { useVirtualizer } from '@tanstack/react-virtual'
 import { ShapefileParser } from '@microti/file-handler'
 import type { ShapefileParseResult, ShapefileParserOptions } from '@microti/file-handler'
 import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/Select'
-import { Upload, Download, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Trash2, Filter, Plus, X } from 'lucide-react'
+import DataTable from '../../components/DataTable'
+import { Upload, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Trash2, Filter, Plus, X, BookOpen, Download } from 'lucide-react'
+import type { ColumnDef } from '@tanstack/react-table'
+
+// 导入规则管理组件
+import { useRuleEngine } from '../data-processor/hooks/useRuleEngine'
+import { RuleManager } from '../data-processor/components/RuleManager'
+import { processData } from '../data-processor/utils/ruleEngine'
+import type { ProcessingRule } from '../data-processor/types'
 
 type FilterOp = 'contains' | 'equals' | 'startsWith' | 'endsWith' | 'notContains' | 'isEmpty' | 'isNotEmpty'
 
@@ -32,7 +39,33 @@ export default function ShapefileConverter() {
   const [editValue, setEditValue] = useState('')
   const [filters, setFilters] = useState<FilterRule[]>([])
   const [showFilterPanel, setShowFilterPanel] = useState(false)
+  const [showRulesPanel, setShowRulesPanel] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // 规则管理
+  const {
+    rules,
+    addRule,
+    editRule,
+    removeRule,
+    moveRuleUp,
+    moveRuleDown,
+    clearRules,
+    exportRules,
+    importRules,
+  } = useRuleEngine()
+
+  // 获取表头（排除几何字段）
+  const headers = useMemo(() => {
+    if (!result?.headers) return []
+    return result.headers.filter(h => h.prop !== 'GEOMETRY' && h.prop !== 'wkt' && h.prop !== 'wktType')
+  }, [result])
+
+  // 获取可用的列名
+  const columns = useMemo(() => {
+    return headers.map(h => h.prop)
+  }, [headers])
 
   useEffect(() => {
     if (result?.data) {
@@ -42,6 +75,37 @@ export default function ShapefileConverter() {
       setFilters([])
     }
   }, [result])
+
+  // 应用规则到表格数据
+  const handleApplyRules = () => {
+    if (!tableData.length || rules.length === 0) return
+
+    setIsProcessing(true)
+    setError('')
+
+    try {
+      // 应用规则处理数据并更新表格
+      const processedData = processData(tableData, rules, columns)
+      setTableData(processedData)
+      // 处理完成后清空规则
+      clearRules()
+      alert('处理完成！')
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : '处理失败')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleAddRule = (rule: ProcessingRule) => {
+    addRule(rule.column, rule.oldValue, rule.newValue, rule.replaceType)
+  }
+
+  const handleAddBatchRules = (newRules: ProcessingRule[]) => {
+    newRules.forEach((rule) => {
+      addRule(rule.column, rule.oldValue, rule.newValue, rule.replaceType)
+    })
+  }
 
   const doParse = useCallback(async (files: File[], zip: boolean, enc: string) => {
     setLoading(true)
@@ -86,6 +150,7 @@ export default function ShapefileConverter() {
     const isZip = files.length === 1 && files[0].name.toLowerCase().endsWith('.zip')
     setUploadedFiles(files)
     setIsZipFile(isZip)
+    clearRules()
     doParse(files, isZip, encoding)
   }, [encoding, doParse])
 
@@ -158,8 +223,10 @@ export default function ShapefileConverter() {
     setEditingCell(null)
     setFilters([])
     setShowFilterPanel(false)
+    setShowRulesPanel(false)
     setProgress(0)
     setProgressMsg('')
+    clearRules()
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -231,10 +298,95 @@ export default function ShapefileConverter() {
     setSelectedRows(new Set())
   }
 
-  const headers = useMemo(() => {
-    if (!result?.headers) return []
-    return result.headers.filter(h => h.prop !== 'GEOMETRY' && h.prop !== 'wkt' && h.prop !== 'wktType')
-  }, [result])
+
+  const allSelected = filteredData.length > 0 && selectedRows.size === filteredData.length
+  const someSelected = selectedRows.size > 0 && selectedRows.size < filteredData.length
+
+  const tableColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
+    return [
+      {
+        id: '__select__',
+        header: () => (
+          <div onClick={toggleSelectAll} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', cursor: 'pointer' }}>
+            {allSelected ? <CheckSquare size={16} color="var(--accent)" /> : someSelected ? <Square size={16} style={{ opacity: 0.4 }} /> : <Square size={16} style={{ opacity: 0.3 }} />}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const isSelected = selectedRows.has(row.index)
+          return (
+            <div onClick={() => toggleSelectRow(row.index)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', cursor: 'pointer' }}>
+              {isSelected ? <CheckSquare size={15} color="var(--accent)" /> : <Square size={15} style={{ opacity: 0.3 }} />}
+            </div>
+          )
+        },
+        size: COL_W_CHECK,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+      },
+      {
+        id: '__idx__',
+        header: '#',
+        cell: ({ row }) => (
+          <span style={{ color: 'var(--text-dim)', fontSize: 12 }}>
+            {String((row.original as Record<string, unknown>)._rowIndex ?? row.index)}
+          </span>
+        ),
+        size: COL_W_IDX,
+        meta: { pin: 'left', align: 'center' },
+        enableSorting: false,
+      },
+      ...headers.map((h) => ({
+        accessorKey: h.prop,
+        header: h.label,
+        cell: ({ row, getValue }) => {
+          const rowIdx = row.index
+          const isEditing = editingCell?.row === rowIdx && editingCell?.col === h.prop
+          return (
+            <div
+              onClick={() => !isEditing && startEdit(rowIdx, h.prop)}
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                cursor: isEditing ? 'text' : 'pointer',
+              }}
+            >
+              {isEditing ? (
+                <input
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={commitEdit}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commitEdit()
+                    if (e.key === 'Escape') cancelEdit()
+                  }}
+                  autoFocus
+                  onFocus={(e) => e.currentTarget.select()}
+                  style={{
+                    width: '100%',
+                    padding: '2px 6px',
+                    fontSize: 13,
+                    border: '1.5px solid var(--accent)',
+                    borderRadius: 4,
+                    background: 'var(--bg-input)',
+                    color: 'var(--text)',
+                    outline: 'none',
+                  }}
+                />
+              ) : (
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+                  {String(getValue() ?? '')}
+                </span>
+              )}
+            </div>
+          )
+        },
+        size: COL_W_DATA,
+        enableSorting: false,
+      })) as ColumnDef<Record<string, unknown>>[],
+    ]
+  }, [allSelected, someSelected, cancelEdit, commitEdit, editValue, editingCell, headers, selectedRows, startEdit, toggleSelectAll, toggleSelectRow])
 
   return (
     <ToolLayout title="Shapefile 解析与导出" description="解析 Shapefile (.shp/.dbf/.prj) 或 ZIP 压缩包，查看属性表格并导出">
@@ -257,6 +409,13 @@ export default function ShapefileConverter() {
           <>
             <button
               className="btn btn-outline"
+              onClick={() => setShowRulesPanel(!showRulesPanel)}
+              style={{ display: 'flex', alignItems: 'center', gap: 4, borderColor: rules.length > 0 ? 'var(--accent)' : undefined }}
+            >
+              <BookOpen size={14} /> 处理规则 {rules.length > 0 && <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 10, padding: '0 6px', fontSize: 11, lineHeight: '18px' }}>{rules.length}</span>}
+            </button>
+            <button
+              className="btn btn-outline"
               onClick={() => setShowFilterPanel(!showFilterPanel)}
               style={{ display: 'flex', alignItems: 'center', gap: 4, borderColor: filters.length > 0 ? 'var(--accent)' : undefined }}
             >
@@ -268,6 +427,41 @@ export default function ShapefileConverter() {
           </>
         )}
       </div>
+
+      {/* Rules Panel */}
+      {showRulesPanel && (
+        <div style={{ marginBottom: 16, padding: 16, background: 'var(--bg-input)', borderRadius: 8, border: '1px solid var(--border)' }}>
+          <div style={{ marginBottom: 16 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>处理规则</h3>
+            <p style={{ fontSize: 13, color: 'var(--text-dim)' }}>添加数据替换规则，应用到表格数据</p>
+          </div>
+          <RuleManager
+            rules={rules}
+            columns={columns}
+            onAddRule={handleAddRule}
+            onAddBatchRules={handleAddBatchRules}
+            onEditRule={editRule}
+            onRemoveRule={removeRule}
+            onMoveRuleUp={moveRuleUp}
+            onMoveRuleDown={moveRuleDown}
+            onClearRules={clearRules}
+            onExportRules={exportRules}
+            onImportRules={importRules}
+          />
+          {rules.length > 0 && (
+            <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+              <button
+                className="btn"
+                onClick={handleApplyRules}
+                disabled={isProcessing}
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                <Download size={14} /> {isProcessing ? '处理中...' : '处理'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Filter Panel */}
       {showFilterPanel && (
@@ -447,16 +641,21 @@ export default function ShapefileConverter() {
           {/* Table */}
           <DataTable
             data={filteredData}
-            headers={headers}
-            selectedRows={selectedRows}
-            editingCell={editingCell}
-            editValue={editValue}
-            onToggleSelectAll={toggleSelectAll}
-            onToggleRow={toggleSelectRow}
-            onStartEdit={startEdit}
-            onEditChange={setEditValue}
-            onCommitEdit={commitEdit}
-            onCancelEdit={cancelEdit}
+            columns={tableColumns}
+            virtualized
+            rowHeight={ROW_HEIGHT}
+            headerHeight={40}
+            maxHeight={520}
+            getRowStyle={(_, rowIndex) => {
+              const isSelected = selectedRows.has(rowIndex)
+              const isEven = rowIndex % 2 === 0
+              const bg = isSelected
+                ? 'rgba(var(--accent-rgb), 0.06)'
+                : isEven
+                  ? 'rgba(128,128,128,0.025)'
+                  : 'transparent'
+              return { background: bg }
+            }}
           />
 
           {/* Toolbar below table */}
@@ -484,209 +683,3 @@ const ROW_HEIGHT = 36
 const COL_W_CHECK = 40
 const COL_W_IDX = 50
 const COL_W_DATA = 150
-
-interface DataTableProps {
-  data: Record<string, unknown>[]
-  headers: { prop: string; label: string; index: number }[]
-  selectedRows: Set<number>
-  editingCell: { row: number; col: string } | null
-  editValue: string
-  onToggleSelectAll: () => void
-  onToggleRow: (idx: number) => void
-  onStartEdit: (rowIdx: number, col: string) => void
-  onEditChange: (val: string) => void
-  onCommitEdit: () => void
-  onCancelEdit: () => void
-}
-
-function DataTable({
-  data, headers, selectedRows, editingCell, editValue,
-  onToggleSelectAll, onToggleRow, onStartEdit, onEditChange, onCommitEdit, onCancelEdit,
-}: DataTableProps) {
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const headerRef = useRef<HTMLDivElement>(null)
-  const editInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (editingCell && editInputRef.current) {
-      editInputRef.current.focus()
-      editInputRef.current.select()
-    }
-  }, [editingCell])
-
-  const virtualizer = useVirtualizer({
-    count: data.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => ROW_HEIGHT,
-    overscan: 5,
-  })
-
-  const syncScroll = () => {
-    if (headerRef.current && scrollRef.current) {
-      headerRef.current.scrollLeft = scrollRef.current.scrollLeft
-    }
-  }
-
-  const allSelected = data.length > 0 && selectedRows.size === data.length
-  const someSelected = selectedRows.size > 0 && selectedRows.size < data.length
-
-  const totalWidth = COL_W_CHECK + COL_W_IDX + headers.length * COL_W_DATA
-
-  return (
-    <div style={{ borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden', background: 'var(--bg)' }}>
-      {/* Header */}
-      <div ref={headerRef} style={{ overflowX: 'hidden', overflowY: 'hidden' }}>
-        <div style={{ width: totalWidth, display: 'flex', height: 40 }}>
-          <div
-            onClick={onToggleSelectAll}
-            style={{
-              width: COL_W_CHECK, minWidth: COL_W_CHECK, flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 13, cursor: 'pointer', userSelect: 'none',
-              borderRight: '1px solid var(--border)',
-              borderBottom: '2px solid var(--accent)',
-              background: 'var(--bg-input)',
-              position: 'sticky', left: 0, zIndex: 3,
-            }}
-          >
-            {allSelected ? <CheckSquare size={16} color="var(--accent)" /> : someSelected ? <Square size={16} style={{ opacity: 0.4 }} /> : <Square size={16} style={{ opacity: 0.3 }} />}
-          </div>
-          <div style={{
-            width: COL_W_IDX, minWidth: COL_W_IDX, flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 12, fontWeight: 600, color: 'var(--text-dim)',
-            borderRight: '1px solid var(--border)',
-            borderBottom: '2px solid var(--accent)',
-            background: 'var(--bg-input)',
-            position: 'sticky', left: COL_W_CHECK, zIndex: 3,
-          }}>
-            #
-          </div>
-          {headers.map(h => (
-            <div key={h.prop} style={{
-              width: COL_W_DATA, minWidth: COL_W_DATA, flexShrink: 0,
-              display: 'flex', alignItems: 'center',
-              padding: '0 12px',
-              fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap',
-              borderRight: '1px solid rgba(128,128,128,0.15)',
-              borderBottom: '2px solid var(--accent)',
-              background: 'var(--bg-input)',
-            }}>
-              {h.label}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Body */}
-      <div
-        ref={scrollRef}
-        onScroll={syncScroll}
-        style={{ height: Math.min(data.length * ROW_HEIGHT, 480), overflow: 'auto' }}
-      >
-        <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
-          {virtualizer.getVirtualItems().map(virtualRow => {
-            const row = data[virtualRow.index]
-            const isSelected = selectedRows.has(virtualRow.index)
-            const isEven = virtualRow.index % 2 === 0
-            const bg = isSelected
-              ? 'rgba(var(--accent-rgb), 0.06)'
-              : isEven
-                ? 'rgba(128,128,128,0.025)'
-                : 'transparent'
-
-            return (
-              <div
-                key={virtualRow.key}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: ROW_HEIGHT,
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-              >
-                <div style={{ width: totalWidth, display: 'flex', height: ROW_HEIGHT, background: bg }}>
-                  {/* Checkbox col */}
-                  <div
-                    onClick={() => onToggleRow(virtualRow.index)}
-                    style={{
-                      width: COL_W_CHECK, minWidth: COL_W_CHECK, flexShrink: 0,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      borderRight: '1px solid var(--border)',
-                      borderBottom: '1px solid rgba(128,128,128,0.08)',
-                      cursor: 'pointer',
-                      position: 'sticky', left: 0, zIndex: 2,
-                      background: bg,
-                    }}
-                  >
-                    {isSelected ? <CheckSquare size={15} color="var(--accent)" /> : <Square size={15} style={{ opacity: 0.3 }} />}
-                  </div>
-                  {/* Index col */}
-                  <div style={{
-                    width: COL_W_IDX, minWidth: COL_W_IDX, flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, color: 'var(--text-dim)',
-                    borderRight: '1px solid var(--border)',
-                    borderBottom: '1px solid rgba(128,128,128,0.08)',
-                    position: 'sticky', left: COL_W_CHECK, zIndex: 2,
-                    background: bg,
-                  }}>
-                    {String(row._rowIndex ?? virtualRow.index)}
-                  </div>
-                  {/* Data cols */}
-                  {headers.map(h => {
-                    const isEditing = editingCell?.row === virtualRow.index && editingCell?.col === h.prop
-                    return (
-                      <div
-                        key={h.prop}
-                        onClick={() => !isEditing && onStartEdit(virtualRow.index, h.prop)}
-                        style={{
-                          width: COL_W_DATA, minWidth: COL_W_DATA, flexShrink: 0,
-                          display: 'flex', alignItems: 'center',
-                          padding: isEditing ? '2px 4px' : '0 12px',
-                          fontSize: 13,
-                          borderRight: '1px solid rgba(128,128,128,0.12)',
-                          borderBottom: '1px solid rgba(128,128,128,0.08)',
-                          cursor: isEditing ? 'text' : 'pointer',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {isEditing ? (
-                          <input
-                            ref={editInputRef}
-                            value={editValue}
-                            onChange={e => onEditChange(e.target.value)}
-                            onBlur={onCommitEdit}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') onCommitEdit()
-                              if (e.key === 'Escape') onCancelEdit()
-                            }}
-                            onClick={e => e.stopPropagation()}
-                            style={{
-                              width: '100%', padding: '2px 6px', fontSize: 13,
-                              border: '1.5px solid var(--accent)', borderRadius: 4,
-                              background: 'var(--bg-input)', color: 'var(--text)',
-                              outline: 'none',
-                            }}
-                          />
-                        ) : (
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
-                            {String(row[h.prop] ?? '')}
-                          </span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}

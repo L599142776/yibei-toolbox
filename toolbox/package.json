@@ -17,7 +17,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@microti/file-handler": "^1.0.2",
+    "@microti/file-handler": "^1.0.3",
+    "@mapbox/shp-write": "^0.4.3",
+    "@tanstack/react-table": "^8.20.0",
     "@tanstack/react-virtual": "^3.13.23",
     "@turf/turf": "^7.3.4",
     "@types/geojson": "^7946.0.16",
@@ -116,7 +118,7 @@
           ]
         }
       ],
-      "icon": "public/icon.png",
+      "icon": "public/icon.svg",
       "category": "Development"
     }
   }
