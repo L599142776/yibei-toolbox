@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 const timezones = [
   { id: 'Asia/Shanghai', label: '北京/上海 (UTC+8)' },

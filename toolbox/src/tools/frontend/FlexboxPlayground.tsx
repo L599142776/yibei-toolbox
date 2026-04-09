@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 type Direction = 'row' | 'row-reverse' | 'column' | 'column-reverse'
 type Justify = 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around' | 'space-evenly'

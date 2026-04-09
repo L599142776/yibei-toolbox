@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Search } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 // 使用 DNS over HTTPS (Google/Cloudflare)
 export default function DnsLookup() {

@@ -1,0 +1,95 @@
+/* Table 样式 - shadcn/ui 风格 */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table-thead {
+  background: var(--bg-input);
+}
+
+.table-th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.table-column-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.table-column-header:hover {
+  color: var(--text);
+}
+
+.table-tbody .table-tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.table-tbody .table-tr:last-child {
+  border-bottom: none;
+}
+
+.table-tbody .table-tr:hover {
+  background: var(--bg-hover);
+}
+
+.table-td {
+  padding: 12px 16px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.table-empty {
+  padding: 40px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+/* 斑马纹 */
+.table-tbody .table-tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.table-tbody .table-tr:nth-child(even):hover {
+  background: var(--bg-hover);
+}
+
+/* 选中状态 */
+.table-tr.selected {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* 表头固定 */
+.table-container.fixed-header .table-thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}

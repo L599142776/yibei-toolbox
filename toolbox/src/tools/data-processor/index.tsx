@@ -1,8 +1,8 @@
 // 数据批量整理工具 - 主入口
 
-import { useState } from 'react'
-import { FileUp, Play, RotateCcw, CheckCircle, Sparkles, BookOpen, AlertCircle } from 'lucide-react'
+import { FileUp, Play, RotateCcw, Sparkles, BookOpen, AlertCircle } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
+import { toast } from '../../components/ui/Toast'
 import { FileUploader } from './components/FileUploader'
 import { DataPreview } from './components/DataPreview'
 import { RuleManager } from './components/RuleManager'
@@ -34,13 +34,10 @@ export default function DataProcessor() {
     clearProcessedData,
   } = useDataProcessor()
 
-  const [showSuccess, setShowSuccess] = useState(false)
-
   const handleFileSelect = async (file: File, options?: FileParseOptions) => {
     await parseFile(file, options)
     clearRules()
     clearProcessedData()
-    setShowSuccess(false)
   }
 
   const handleAddRule = (rule: ProcessingRule) => {
@@ -62,12 +59,12 @@ export default function DataProcessor() {
 
     try {
       await processAndExport(parsedData, rules)
-      setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
+      toast('处理完成！文件已下载。', 'success')
       // 处理完成后清空规则
       clearRules()
     } catch (error) {
       console.error('处理失败:', error)
+      toast('处理失败，请重试', 'error')
     }
   }
 
@@ -75,7 +72,6 @@ export default function DataProcessor() {
     clearData()
     clearRules()
     clearProcessedData()
-    setShowSuccess(false)
   }
 
   return (
@@ -194,19 +190,6 @@ export default function DataProcessor() {
                 <div className="data-processor-error">
                   <AlertCircle className="data-processor-error-icon" />
                   <span>{processError}</span>
-                </div>
-              )}
-
-              {/* 成功提示 */}
-              {showSuccess && (
-                <div className="data-processor-success">
-                  <div className="data-processor-success-icon">
-                    <CheckCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="data-processor-success-title">数据处理完成！</p>
-                    <p className="data-processor-success-desc">文件已自动下载到本地</p>
-                  </div>
                 </div>
               )}
 

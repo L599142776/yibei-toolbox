@@ -7,6 +7,27 @@
   --sidebar-width: 260px;
   --header-height: 64px;
   --bottom-nav-height: 64px;
+
+  /* shadcn/ui 主题变量 */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --card: var(--bg-card);
+  --card-foreground: var(--text);
+  --popover: var(--bg-card);
+  --popover-foreground: var(--text);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--bg-input);
+  --secondary-foreground: var(--text);
+  --muted: var(--bg-input);
+  --muted-foreground: var(--text-dim);
+  --accent: var(--accent);
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: var(--border);
+  --input: var(--bg-input);
+  --ring: var(--accent);
 }
 
 /* ─── 深色主题（默认） ─── */

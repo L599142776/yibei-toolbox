@@ -2,7 +2,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { Copy, Check, AlertCircle } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 import DataTable from '../../components/DataTable'
 import type { ColumnDef } from '@tanstack/react-table'
 

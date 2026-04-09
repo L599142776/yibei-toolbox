@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 
 // 仅在环境变量或 Electron 可用时加载 electron 插件
 const hasElectron = process.env.ELECTRON_DEV === 'true'
 
 export default defineConfig(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const plugins: any[] = [react()]
+  const plugins: any[] = [react(), tailwindcss()]
 
   if (hasElectron) {
     const electron = (await import('vite-plugin-electron')).default

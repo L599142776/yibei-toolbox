@@ -1,7 +1,7 @@
 // src/tools/datetime/Timestamp.tsx
 import { useState, useEffect } from 'react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 export default function Timestamp() {
   const [now, setNow] = useState(0)

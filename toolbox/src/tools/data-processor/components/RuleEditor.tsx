@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { X, Plus, List, AlertCircle, Info } from 'lucide-react'
 import type { ProcessingRule, ReplaceType } from '../types'
-import Select from '../../../components/Select'
+import Select from '../../../components/ui/Select'
 
 interface RuleEditorProps {
   columns: string[]

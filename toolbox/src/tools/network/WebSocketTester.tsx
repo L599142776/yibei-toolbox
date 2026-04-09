@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Wifi, WifiOff, Send, Trash2, Download, Search, X, ChevronDown, ChevronUp } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 interface LogEntry {
   id: number

@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react'
 import { Copy } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 const algos = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'] as const
 

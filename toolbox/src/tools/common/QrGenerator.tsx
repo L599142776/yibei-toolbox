@@ -1,7 +1,7 @@
 // src/tools/common/QrGenerator.tsx
 import { useState, useRef } from 'react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 // 轻量 QR 生成 — 使用在线 API (避免引入重依赖)
 export default function QrGenerator() {

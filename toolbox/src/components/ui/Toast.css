@@ -1,0 +1,53 @@
+/* Toast 样式 - shadcn/ui 风格 */
+
+.toaster {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  color: var(--text);
+  font-size: 14px;
+  animation: toastIn 0.2s ease-out;
+  pointer-events: auto;
+}
+
+.toast-success {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.toast-error {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.toast-info {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

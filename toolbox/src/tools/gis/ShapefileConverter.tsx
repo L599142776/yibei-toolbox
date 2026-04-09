@@ -2,10 +2,11 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { ShapefileParser } from '@microti/file-handler'
 import type { ShapefileParseResult, ShapefileParserOptions } from '@microti/file-handler'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 import DataTable from '../../components/DataTable'
-import { Upload, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Trash2, Filter, Plus, X, BookOpen, Download } from 'lucide-react'
+import { Upload, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Filter, Plus, X, BookOpen, Download } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
+import { toast } from '../../components/ui/Toast'
 
 // 导入规则管理组件
 import { useRuleEngine } from '../data-processor/hooks/useRuleEngine'
@@ -41,6 +42,9 @@ export default function ShapefileConverter() {
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [showRulesPanel, setShowRulesPanel] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(100)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 规则管理
@@ -89,7 +93,7 @@ export default function ShapefileConverter() {
       setTableData(processedData)
       // 处理完成后清空规则
       // clearRules()
-      alert('处理完成！')
+      toast('处理完成！', 'success')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : '处理失败')
     } finally {
@@ -196,6 +200,14 @@ export default function ShapefileConverter() {
     )
   }, [tableData, filters])
 
+  // 分页数据
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredData.slice(start, start + pageSize)
+  }, [filteredData, currentPage, pageSize])
+
+  const totalPages = Math.ceil(filteredData.length / pageSize)
+
   const handleExport = async () => {
     const dataToExport = selectedRows.size > 0
       ? filteredData.filter((_, i) => selectedRows.has(i))
@@ -270,15 +282,15 @@ export default function ShapefileConverter() {
     setEditingCell(null)
   }
 
-  const deleteSelected = () => {
-    if (!selectedRows.size) return
-    const toRemove = new Set(selectedRows)
-    setTableData(prev => prev.filter((_, i) => {
-      const filteredIdx = filteredData.indexOf(prev[i])
-      return filteredIdx === -1 || !toRemove.has(filteredIdx)
-    }))
-    setSelectedRows(new Set())
-  }
+  // const deleteSelected = () => {
+  //   if (!selectedRows.size) return
+  //   const toRemove = new Set(selectedRows)
+  //   setTableData(prev => prev.filter((_, i) => {
+  //     const filteredIdx = filteredData.indexOf(prev[i])
+  //     return filteredIdx === -1 || !toRemove.has(filteredIdx)
+  //   }))
+  //   setSelectedRows(new Set())
+  // }
 
   const addFilter = () => {
     const firstCol = headers.length > 0 ? headers[0].prop : ''
@@ -640,7 +652,7 @@ export default function ShapefileConverter() {
 
           {/* Table */}
           <DataTable
-            data={filteredData}
+            data={paginatedData}
             columns={tableColumns}
             virtualized
             rowHeight={ROW_HEIGHT}
@@ -658,19 +670,49 @@ export default function ShapefileConverter() {
             }}
           />
 
-          {/* Toolbar below table */}
-          {selectedRows.size > 0 && (
-            <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="btn btn-outline" onClick={deleteSelected} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#ef4444', borderColor: '#ef4444' }}>
-                <Trash2 size={14} /> 删除已选 ({selectedRows.size})
-              </button>
-            </div>
-          )}
-
-          {/* Pagination info */}
-          {result.hasMore && (
-            <div style={{ marginTop: 12, fontSize: 13, color: 'var(--text-dim)', textAlign: 'center' }}>
-              显示第 {result.page} 页，共 {result.totalPages} 页（{result.totalRows} 条），当前每页 {result.pageSize} 条
+          {/* 分页控件 */}
+          {filteredData.length > 0 && (
+            <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--text-dim)' }}>
+                <span>每页</span>
+                <Select
+                  value={String(pageSize)}
+                  onChange={v => { setPageSize(Number(v)); setCurrentPage(1) }}
+                  options={[
+                    { value: '50', label: '50' },
+                    { value: '100', label: '100' },
+                    { value: '200', label: '200' },
+                    { value: '500', label: '500' },
+                  ]}
+                  width={70}
+                  fontSize={13}
+                />
+                <span>条</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{ padding: '4px 8px', fontSize: 13 }}
+                >
+                  上一页
+                </button>
+                <span style={{ fontSize: 13, color: 'var(--text)' }}>
+                  第 {currentPage} / {totalPages} 页
+                </span>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{ padding: '4px 8px', fontSize: 13 }}
+                >
+                  下一页
+                </button>
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
+                共 {filteredData.length} 条
+              </div>
             </div>
           )}
         </>

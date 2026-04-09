@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react'
 import { Upload, FileSpreadsheet, Map, FileText, AlertCircle, Settings2 } from 'lucide-react'
 import type { FileParseOptions } from '../types'
-import Select from '../../../components/Select'
+import Select from '../../../components/ui/Select'
 
 interface FileUploaderProps {
   onFileSelect: (file: File, options?: FileParseOptions) => void

@@ -17,7 +17,12 @@ import Home from './pages/Home'
 import Category from './pages/Category'
 import { allTools } from './tools/registry'
 import { isElectron } from './utils/platform'
+import { Toaster } from './components/ui/Toast'
 import './App.css'
+import './components/ui/Dialog.css'
+import './components/ui/Select.css'
+import './components/ui/Table.css'
+import './components/ui/Toast.css'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -79,6 +84,9 @@ function App() {
                 </Suspense>
               </main>
             </div>
+
+            {/* Toast 通知组件 */}
+            <Toaster />
 
             {/* 移动端底部导航 */}
             <nav className="bottom-nav">

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 // WGS84 → GCJ-02 (火星坐标) 偏移算法
 function wgs84ToGcj02(lng: number, lat: number): [number, number] {

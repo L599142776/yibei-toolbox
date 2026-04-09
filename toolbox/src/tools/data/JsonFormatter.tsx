@@ -2,7 +2,7 @@
 import { useMemo, useState } from 'react'
 import { Copy, Minimize2 } from 'lucide-react'
 import ToolLayout from '../../components/ToolLayout'
-import Select from '../../components/Select'
+import Select from '../../components/ui/Select'
 
 export default function JsonFormatter() {
   const [input, setInput] = useState('')
