@@ -942,6 +942,19 @@ body {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 .theme-toggle-item {
   width: 100%;
   display: flex;
@@ -1188,6 +1201,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 2px;
+  color: var(--text);
 }
 
 .quick-action-text p {

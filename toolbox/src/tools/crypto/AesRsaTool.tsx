@@ -1,6 +1,8 @@
 import ToolLayout from '../../components/ToolLayout'
-import { Key, Lock, Unlock, RefreshCw, Copy, Shield } from 'lucide-react'
+import Select from '../../components/ui/Select'
+import { Key, Lock, Unlock, RefreshCw, Copy, Shield, KeyRound } from 'lucide-react'
 import { useState, useCallback } from 'react'
+import { toast } from '../../components/ui/Toast'
 
 // Convert ArrayBuffer to Base64
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
@@ -248,6 +250,7 @@ export default function AesRsaTool() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
+    toast('已复制到剪贴板', 'success')
   }
 
   return (
@@ -256,25 +259,43 @@ export default function AesRsaTool() {
       description="AES 对称加密和 RSA 非对称加密工具，使用浏览器 Web Crypto API"
     >
       {/* Tab buttons */}
-      <div className="flex gap-2 mb-6">
+      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
         <button
           onClick={() => setTab('aes')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-            tab === 'aes'
-              ? 'bg-blue-500 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 20px',
+            borderRadius: 8,
+            fontWeight: 500,
+            fontSize: 14,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: tab === 'aes' ? 'var(--accent)' : 'var(--bg-input)',
+            color: tab === 'aes' ? '#fff' : 'var(--text-dim)',
+          }}
         >
           <Key size={18} />
           AES 对称加密
         </button>
         <button
           onClick={() => setTab('rsa')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-            tab === 'rsa'
-              ? 'bg-purple-500 text-white shadow-lg'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 20px',
+            borderRadius: 8,
+            fontWeight: 500,
+            fontSize: 14,
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            background: tab === 'rsa' ? 'var(--accent)' : 'var(--bg-input)',
+            color: tab === 'rsa' ? '#fff' : 'var(--text-dim)',
+          }}
         >
           <Shield size={18} />
           RSA 非对称加密
@@ -283,44 +304,48 @@ export default function AesRsaTool() {
 
       {/* AES Panel */}
       {tab === 'aes' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Key settings */}
-          <div className="bg-gray-800/50 rounded-lg p-4 space-y-4">
-            <h3 className="font-semibold text-gray-200 flex items-center gap-2">
-              <Key size={18} />
+          <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h3 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text)' }}>
+              <Key size={18} style={{ color: 'var(--accent)' }} />
               AES 密钥设置
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">加密模式</label>
-                <select
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--text-dim)', marginBottom: 6 }}>加密模式</label>
+                <Select
                   value={aesMode}
-                  onChange={(e) => setAesMode(e.target.value as 'GCM' | 'CBC')}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value="GCM">AES-GCM（推荐，支持认证加密）</option>
-                  <option value="CBC">AES-CBC</option>
-                </select>
+                  onChange={(v) => setAesMode(v as 'GCM' | 'CBC')}
+                  options={[
+                    { value: 'GCM', label: 'AES-GCM（推荐）' },
+                    { value: 'CBC', label: 'AES-CBC' },
+                  ]}
+                  width="100%"
+                  fontSize={14}
+                />
               </div>
               <div>
-                <label className="block text-sm text-gray-400 mb-1">密钥长度</label>
-                <select
-                  value={aesKeySize}
-                  onChange={(e) => setAesKeySize(Number(e.target.value) as 128 | 192 | 256)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value={128}>128 位</option>
-                  <option value={192}>192 位</option>
-                  <option value={256}>256 位（推荐）</option>
-                </select>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--text-dim)', marginBottom: 6 }}>密钥长度</label>
+                <Select
+                  value={String(aesKeySize)}
+                  onChange={(v) => setAesKeySize(Number(v) as 128 | 192 | 256)}
+                  options={[
+                    { value: '128', label: '128 位' },
+                    { value: '192', label: '192 位' },
+                    { value: '256', label: '256 位（推荐）' },
+                  ]}
+                  width="100%"
+                  fontSize={14}
+                />
               </div>
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">密钥（十六进制）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>密钥（十六进制）</label>
                 <button
                   onClick={generateAesKey}
-                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <RefreshCw size={12} />
                   生成
@@ -331,15 +356,15 @@ export default function AesRsaTool() {
                 value={aesKey}
                 onChange={(e) => setAesKey(e.target.value)}
                 placeholder="点击生成或手动输入 16/24/32 字节密钥"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm"
+                style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--text)', fontFamily: 'monospace' }}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">IV 向量（十六进制）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>IV 向量（十六进制）</label>
                 <button
                   onClick={generateAesIv}
-                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
                   <RefreshCw size={12} />
                   生成
@@ -350,29 +375,29 @@ export default function AesRsaTool() {
                 value={aesIv}
                 onChange={(e) => setAesIv(e.target.value)}
                 placeholder="点击生成 IV（GCM: 24字符, CBC: 32字符）"
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm"
+                style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: 'var(--text)', fontFamily: 'monospace' }}
               />
             </div>
           </div>
 
           {/* Input/Output */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">明文输入</label>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--text-dim)', marginBottom: 6 }}>明文输入</label>
               <textarea
                 value={aesInput}
                 onChange={(e) => setAesInput(e.target.value)}
                 placeholder="输入要加密的文本..."
-                className="w-full h-40 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none"
+                style={{ width: '100%', height: 160, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--text)', resize: 'none' }}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">密文输出（Base64）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>密文输出（Base64）</label>
                 {aesOutput && (
                   <button
                     onClick={() => copyToClipboard(aesOutput)}
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Copy size={12} />
                     复制
@@ -383,17 +408,33 @@ export default function AesRsaTool() {
                 value={aesOutput}
                 onChange={(e) => setAesOutput(e.target.value)}
                 placeholder="加密/解密结果将显示在这里..."
-                className="w-full h-40 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm resize-none"
+                style={{ width: '100%', height: 160, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--text)', fontFamily: 'monospace', resize: 'none' }}
               />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: 12 }}>
             <button
               onClick={encryptAES}
               disabled={aesLoading}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors"
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px 20px',
+                borderRadius: 8,
+                fontWeight: 500,
+                fontSize: 14,
+                border: 'none',
+                cursor: aesLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                background: 'var(--accent)',
+                color: '#fff',
+                opacity: aesLoading ? 0.7 : 1,
+              }}
             >
               <Lock size={18} />
               {aesLoading ? '处理中...' : '加密'}
@@ -401,7 +442,23 @@ export default function AesRsaTool() {
             <button
               onClick={decryptAES}
               disabled={aesLoading}
-              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors"
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px 20px',
+                borderRadius: 8,
+                fontWeight: 500,
+                fontSize: 14,
+                border: 'none',
+                cursor: aesLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                background: 'var(--bg-input)',
+                color: 'var(--text)',
+                opacity: aesLoading ? 0.7 : 1,
+              }}
             >
               <Unlock size={18} />
               {aesLoading ? '处理中...' : '解密'}
@@ -409,12 +466,12 @@ export default function AesRsaTool() {
           </div>
 
           {aesError && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
+            <div style={{ padding: 12, borderRadius: 8, fontSize: 13, color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
               {aesError}
             </div>
           )}
 
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-300 text-sm">
+          <div style={{ padding: 12, borderRadius: 8, fontSize: 13, color: 'var(--text-dim)', background: 'var(--bg-input)' }}>
             <strong>说明：</strong>密文输出包含 IV，无需单独传输。GCM 模式提供认证加密，可检测篡改。
           </div>
         </div>
@@ -422,41 +479,57 @@ export default function AesRsaTool() {
 
       {/* RSA Panel */}
       {tab === 'rsa' && (
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Key generation */}
-          <div className="bg-gray-800/50 rounded-lg p-4 space-y-4">
-            <h3 className="font-semibold text-gray-200 flex items-center gap-2">
-              <Shield size={18} />
+          <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h3 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text)' }}>
+              <KeyRound size={18} style={{ color: 'var(--accent)' }} />
               RSA 密钥对生成
             </h3>
-            <div className="flex items-end gap-4">
-              <div className="flex-1">
-                <label className="block text-sm text-gray-400 mb-1">密钥长度</label>
-                <select
-                  value={rsaKeySize}
-                  onChange={(e) => setRsaKeySize(Number(e.target.value) as 2048 | 4096)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
-                >
-                  <option value={2048}>2048 位（兼容性好）</option>
-                  <option value={4096}>4096 位（更安全）</option>
-                </select>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 200 }}>
+                <label style={{ display: 'block', fontSize: 13, color: 'var(--text-dim)', marginBottom: 6 }}>密钥长度</label>
+                <Select
+                  value={String(rsaKeySize)}
+                  onChange={(v) => setRsaKeySize(Number(v) as 2048 | 4096)}
+                  options={[
+                    { value: '2048', label: '2048 位（兼容性好）' },
+                    { value: '4096', label: '4096 位（更安全）' },
+                  ]}
+                  width={200}
+                  fontSize={14}
+                />
               </div>
               <button
                 onClick={generateRsaKeyPair}
                 disabled={rsaLoading}
-                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  fontWeight: 500,
+                  fontSize: 14,
+                  border: 'none',
+                  cursor: rsaLoading ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  background: 'var(--accent)',
+                  color: '#fff',
+                  opacity: rsaLoading ? 0.7 : 1,
+                }}
               >
-                <RefreshCw size={18} className={rsaLoading ? 'animate-spin' : ''} />
+                <RefreshCw size={18} style={rsaLoading ? { animation: 'spin 1s linear infinite' } : {}} />
                 生成密钥对
               </button>
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">公钥（Base64）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>公钥（Base64）</label>
                 {rsaPublicKey && (
                   <button
                     onClick={() => copyToClipboard(rsaPublicKey)}
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Copy size={12} />
                     复制
@@ -467,16 +540,16 @@ export default function AesRsaTool() {
                 value={rsaPublicKey}
                 onChange={(e) => setRsaPublicKey(e.target.value)}
                 placeholder="生成密钥对后将自动填入公钥，或粘贴他人的公钥..."
-                className="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-xs resize-none"
+                style={{ width: '100%', height: 100, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 12, color: 'var(--text)', fontFamily: 'monospace', resize: 'none' }}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">私钥（Base64，请妥善保管！）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>私钥（Base64，请妥善保管！）</label>
                 {rsaPrivateKey && (
                   <button
                     onClick={() => copyToClipboard(rsaPrivateKey)}
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Copy size={12} />
                     复制
@@ -487,29 +560,29 @@ export default function AesRsaTool() {
                 value={rsaPrivateKey}
                 onChange={(e) => setRsaPrivateKey(e.target.value)}
                 placeholder="生成密钥对后将自动填入私钥..."
-                className="w-full h-24 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-xs resize-none"
+                style={{ width: '100%', height: 100, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 12, color: 'var(--text)', fontFamily: 'monospace', resize: 'none' }}
               />
             </div>
           </div>
 
           {/* Input/Output */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
             <div>
-              <label className="block text-sm text-gray-400 mb-1">明文输入</label>
+              <label style={{ display: 'block', fontSize: 13, color: 'var(--text-dim)', marginBottom: 6 }}>明文输入</label>
               <textarea
                 value={rsaInput}
                 onChange={(e) => setRsaInput(e.target.value)}
                 placeholder="输入要加密的文本..."
-                className="w-full h-40 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white resize-none"
+                style={{ width: '100%', height: 160, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--text)', resize: 'none' }}
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="text-sm text-gray-400">密文输出（Base64）</label>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label style={{ fontSize: 13, color: 'var(--text-dim)' }}>密文输出（Base64）</label>
                 {rsaOutput && (
                   <button
                     onClick={() => copyToClipboard(rsaOutput)}
-                    className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    style={{ fontSize: 12, color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     <Copy size={12} />
                     复制
@@ -520,17 +593,33 @@ export default function AesRsaTool() {
                 value={rsaOutput}
                 onChange={(e) => setRsaOutput(e.target.value)}
                 placeholder="加密/解密结果将显示在这里..."
-                className="w-full h-40 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white font-mono text-sm resize-none"
+                style={{ width: '100%', height: 160, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--text)', fontFamily: 'monospace', resize: 'none' }}
               />
             </div>
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3">
+          <div style={{ display: 'flex', gap: 12 }}>
             <button
               onClick={encryptRSA}
               disabled={rsaLoading}
-              className="flex-1 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-600 text-white py-3 rounded-lg font-medium transition-colors"
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px 20px',
+                borderRadius: 8,
+                fontWeight: 500,
+                fontSize: 14,
+                border: 'none',
+                cursor: rsaLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                background: 'var(--accent)',
+                color: '#fff',
+                opacity: rsaLoading ? 0.7 : 1,
+              }}
             >
               <Lock size={18} />
               用公钥加密
@@ -538,7 +627,23 @@ export default function AesRsaTool() {
             <button
               onClick={decryptRSA}
               disabled={rsaLoading}
-              className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-600 text-white py-3 rounded-lg font-medium transition-colors"
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px 20px',
+                borderRadius: 8,
+                fontWeight: 500,
+                fontSize: 14,
+                border: 'none',
+                cursor: rsaLoading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                background: 'var(--bg-input)',
+                color: 'var(--text)',
+                opacity: rsaLoading ? 0.7 : 1,
+              }}
             >
               <Unlock size={18} />
               用私钥解密
@@ -546,12 +651,12 @@ export default function AesRsaTool() {
           </div>
 
           {rsaError && (
-            <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-300 text-sm">
+            <div style={{ padding: 12, borderRadius: 8, fontSize: 13, color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)' }}>
               {rsaError}
             </div>
           )}
 
-          <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-3 text-purple-300 text-sm">
+          <div style={{ padding: 12, borderRadius: 8, fontSize: 13, color: 'var(--text-dim)', background: 'var(--bg-input)' }}>
             <strong>说明：</strong>RSA 使用 RSA-OAEP 算法，适合加密小数据（如对称密钥）。对于大文本，建议配合 AES 使用。
           </div>
         </div>

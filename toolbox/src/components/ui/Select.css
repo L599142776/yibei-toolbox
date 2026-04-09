@@ -19,6 +19,7 @@
   cursor: pointer;
   transition: all 0.15s;
   font-family: inherit;
+  backdrop-filter: blur(8px);
 }
 
 .select-trigger:hover:not(.disabled) {
@@ -67,6 +68,7 @@
   box-shadow: var(--shadow-lg);
   z-index: 40;
   animation: selectIn 0.15s ease-out;
+  backdrop-filter: blur(12px);
 }
 
 .select-item {

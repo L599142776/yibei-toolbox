@@ -4,29 +4,31 @@
 
 ## ✨ 特性
 
-- 🔧 **48 个工具** — 覆盖编码、加密、JSON、时间、网络、图像、GIS 地图等场景
+- 🔧 **80+ 个工具** — 覆盖编码、加密、JSON、时间、网络、图像、GIS 地图等场景
 - 📦 **模块化架构** — 每个工具独立模块，新增工具只需 3 步
 - 🔍 **全局搜索** — 模糊匹配工具名、描述、关键词
 - ⭐ **收藏功能** — 常用工具一键收藏，本地存储
-- 🌙 **深色主题** — 适配暗色环境
+- 🌙 **深色/浅色主题** — 适配暗色和亮色环境，毛玻璃效果
 - 📱 **响应式布局** — 桌面端和移动端自适应
 - 🖥️ **跨平台** — Web 浏览器 + Windows/macOS/Linux 桌面应用
 - 🗺️ **GIS 工具** — 地图文件解析、坐标转换、面积距离计算
+- 📊 **增强数据表格** — 列宽拖拽调整、毛玻璃表头、分页显示
 
 ## 🛠️ 工具分类
 
 | 分类 | 工具数 | 示例 |
 |------|--------|------|
-| 常用工具 | 7 | 二维码生成、随机密码、UUID、单位转换、进制转换、计时器、Lorem Ipsum |
-| 文本处理 | 7 | 字数统计、去空格换行、大小写转换、正则测试、去重、排序、Diff 对比 |
-| 编码加密 | 7 | Base64、URL编解码、Unicode互转、JWT解析、哈希生成、HMAC、HTML实体 |
-| 数据格式 | 4 | JSON格式化、JSON↔CSV、JSON↔YAML、SQL格式化 |
-| 时间日期 | 5 | 时间戳转换、日期计算器、Cron生成器、时区转换、工作日计算 |
-| 网络工具 | 5 | HTTP请求测试、IP查询、DNS查询、User-Agent解析、URL解析器 |
-| 图像工具 | 3 | 图片压缩、图片裁剪、Base64↔图片 |
-| 代码工具 | 2 | 代码格式化、HTML↔Markdown |
-| 前端开发 | 3 | 颜色工具、CSS阴影生成器、Flexbox布局生成器 |
-| **GIS 地图** | **6** | 地图文件查看器、多边形面积计算、距离测量、坐标系转换、GeoJSON编辑器、边界框工具 |
+| 常用工具 | 13 | 二维码生成、随机密码、UUID、单位转换、进制转换、计时器、Lorem Ipsum |
+| 文本处理 | 10 | 字数统计、去空格换行、大小写转换、正则测试、去重、排序、Diff 对比 |
+| 编码加密 | 9 | Base64、URL编解码、Unicode互转、JWT解析、哈希生成、HMAC、**AES/RSA加解密**、HTML实体 |
+| 数据格式 | 8 | JSON格式化、JSON↔CSV、JSON↔YAML、SQL格式化 |
+| 时间日期 | 6 | 时间戳转换、日期计算器、Cron生成器、时区转换、工作日计算 |
+| 网络工具 | 8 | HTTP请求测试、IP查询、DNS查询、User-Agent解析、URL解析器 |
+| 图像工具 | 6 | 图片压缩、图片裁剪、Base64↔图片 |
+| 代码工具 | 3 | 代码格式化、HTML↔Markdown |
+| 前端开发 | 4 | 颜色工具、CSS阴影生成器、Flexbox布局生成器 |
+| **GIS 地图** | **8** | 地图文件查看器、多边形面积计算、距离测量、坐标系转换、GeoJSON编辑器、边界框工具 |
+| 休闲娱乐 | 4 | 经典小游戏 |
 
 ### 🗺️ GIS 工具详情
 
@@ -157,10 +159,12 @@ export default function MyTool() {
 - **框架**: React 19 + TypeScript
 - **构建**: Vite 8
 - **路由**: React Router v7
-- **样式**: CSS Variables（深色主题）
+- **样式**: CSS Variables + CSS Modules（深色/浅色主题、毛玻璃效果）
 - **图标**: Lucide React
 - **地图**: Leaflet + React-Leaflet
 - **空间计算**: Turf.js
+- **表格**: @tanstack/react-table + @tanstack/react-virtual
+- **文件处理**: @microti/file-handler
 - **桌面端**: Electron + electron-builder
 - **状态管理**: React Context + localStorage
 
