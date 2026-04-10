@@ -1,15 +1,16 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { resolve } from 'path'
 
-// 仅在环境变量或 Electron 可用时加载 electron 插件
-const hasElectron = process.env.ELECTRON_DEV === 'true'
+// 检查是否为 Electron 环境或构建
+const isElectron = process.env.ELECTRON_DEV || process.env.npm_lifecycle_event?.includes('electron')
 
 export default defineConfig(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugins: any[] = [react(), tailwindcss()]
 
-  if (hasElectron) {
+  if (isElectron) {
     const electron = (await import('vite-plugin-electron')).default
     const renderer = (await import('vite-plugin-electron-renderer')).default
     plugins.push(
@@ -56,6 +57,13 @@ export default defineConfig(async () => {
           target: 'http://api.songzixian.com',
           changeOrigin: true,
           rewrite: (path: string) => path.replace(/^\/phone-api/, '/api/phone-location'),
+        },
+      },
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
         },
       },
     },

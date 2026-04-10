@@ -15,7 +15,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 600,
     title: '艺北工具箱',
-    icon: join(__dirname, '../public/icon.png'),
+    icon: join(__dirname, '../public/icon.svg'),
     webPreferences: {
       preload: join(__dirname, 'preload.js'),
       contextIsolation: true,
