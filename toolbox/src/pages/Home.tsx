@@ -1,4 +1,5 @@
-// src/pages/Home.tsx
+// 首页 - 参考 Modal 风格设计
+
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Star, Sparkles, Zap, Shield, Clock, ArrowRight } from 'lucide-react'
 import * as Icons from 'lucide-react'
@@ -12,35 +13,51 @@ export default function Home() {
   const [searchParams] = useSearchParams()
   const { favorites } = useFavorites()
   const favTools = allTools.filter((t) => favorites.includes(t.id))
-  
+
   const activeTab = searchParams.get('tab') || 'home'
 
   const quickActions = [
-    { icon: Zap, title: 'Base64编码', desc: '快速编解码', path: '/common/base64', color: '#f59e0b' },
-    { icon: Shield, title: '哈希生成', desc: 'MD5/SHA256', path: '/crypto/hash', color: '#ef4444' },
-    { icon: Clock, title: '时间戳', desc: '时间转换', path: '/datetime/timestamp', color: '#10b981' },
-    { icon: Sparkles, title: 'JSON格式化', desc: '美化/压缩', path: '/data/json', color: '#8b5cf6' },
+    { icon: Zap, title: 'Base64编码', desc: '快速编解码', path: '/common/base64', color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)' },
+    { icon: Shield, title: '哈希生成', desc: 'MD5/SHA256', path: '/crypto/hash', color: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+    { icon: Clock, title: '时间戳', desc: '时间转换', path: '/datetime/timestamp', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+    { icon: Sparkles, title: 'JSON格式化', desc: '美化/压缩', path: '/data/json', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
   ]
 
   // 首页
   if (activeTab === 'home') {
     return (
       <div className="home">
+        {/* 动态背景 */}
+        <div className="hero-background">
+          <div className="hero-grid" />
+          <div className="hero-glow hero-glow-1" />
+          <div className="hero-glow hero-glow-2" />
+          <div className="hero-glow hero-glow-3" />
+        </div>
+
         {/* 英雄区域 */}
         <section className="hero-section">
-          <h1 className="hero-title">开发者工具箱</h1>
+          <div className="hero-badge">
+            <Sparkles size={14} />
+            <span>纯前端 · 零后端 · 本地处理</span>
+          </div>
+          <h1 className="hero-title">
+            <span className="hero-title-gradient">开发者工具箱</span>
+          </h1>
           <p className="hero-subtitle">
-            纯前端实现的在线工具集，无需后端服务，所有数据本地处理
+            高性能在线工具集，无需后端服务，所有数据本地处理，安全高效
           </p>
           <div className="hero-stats">
             <div className="hero-stat">
               <div className="hero-stat-value">{allTools.length}</div>
               <div className="hero-stat-label">个工具</div>
             </div>
+            <div className="hero-stat-divider" />
             <div className="hero-stat">
               <div className="hero-stat-value">{categories.length}</div>
               <div className="hero-stat-label">个分类</div>
             </div>
+            <div className="hero-stat-divider" />
             <div className="hero-stat">
               <div className="hero-stat-value">100%</div>
               <div className="hero-stat-label">本地处理</div>
@@ -52,7 +69,7 @@ export default function Home() {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">
-              <Zap size={20} /> 快速访问
+              <Zap size={20} className="section-icon" /> 快速访问
             </h2>
           </div>
           <div className="quick-actions">
@@ -64,7 +81,10 @@ export default function Home() {
                   className="quick-action"
                   onClick={() => navigate(action.path)}
                 >
-                  <div className="quick-action-icon" style={{ '--action-color': action.color } as React.CSSProperties}>
+                  <div
+                    className="quick-action-icon"
+                    style={{ '--action-gradient': action.gradient } as React.CSSProperties}
+                  >
                     <Icon size={22} />
                   </div>
                   <div className="quick-action-text">
@@ -83,9 +103,9 @@ export default function Home() {
           <section className="section">
             <div className="section-header">
               <h2 className="section-title">
-                <Star size={20} /> 我的收藏
+                <Star size={20} className="section-icon" /> 我的收藏
               </h2>
-              <button 
+              <button
                 className="btn btn-outline btn-sm"
                 onClick={() => navigate('/?tab=favorites')}
               >
@@ -104,7 +124,7 @@ export default function Home() {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">热门分类</h2>
-            <button 
+            <button
               className="btn btn-outline btn-sm"
               onClick={() => navigate('/?tab=categories')}
             >
@@ -122,6 +142,7 @@ export default function Home() {
                   onClick={() => navigate(`/${cat.id}`)}
                   style={{ '--cat-color': cat.color } as React.CSSProperties}
                 >
+                  <div className="category-card-glow" />
                   <div className="category-card-icon">
                     <CatIcon size={26} />
                   </div>
@@ -137,7 +158,7 @@ export default function Home() {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">全部工具</h2>
-            <button 
+            <button
               className="btn btn-outline btn-sm"
               onClick={() => navigate('/?tab=all')}
             >
@@ -180,7 +201,7 @@ export default function Home() {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">
-              <Star size={20} /> 我的收藏
+              <Star size={20} className="section-icon" /> 我的收藏
             </h2>
             <span className="section-subtitle">{favTools.length} 个收藏</span>
           </div>
@@ -196,7 +217,7 @@ export default function Home() {
                 <Star size={32} />
               </div>
               <p>还没有收藏任何工具</p>
-              <button 
+              <button
                 className="btn"
                 onClick={() => navigate('/?tab=all')}
               >
@@ -228,6 +249,7 @@ export default function Home() {
                 onClick={() => navigate(`/${cat.id}`)}
                 style={{ '--cat-color': cat.color } as React.CSSProperties}
               >
+                <div className="category-card-glow" />
                 <div className="category-card-icon">
                   <CatIcon size={26} />
                 </div>
