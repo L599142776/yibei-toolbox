@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 对话功能测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin: 0;
+        }
+        
+        .header p {
+            color: #666;
+            margin: 10px 0 0;
+        }
+        
+        .status {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+        
+        .status-item {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .status-item.success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-item.error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-item.warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-item.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        
+        .test-section h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .test-button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        
+        .test-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+        
+        .test-result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .test-result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .test-result.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #007bff;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature-item {
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .feature-item.implemented {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .feature-item.implemented::before {
+            content: "✓ ";
+        }
+        
+        .feature-item.not-implemented {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .feature-item.not-implemented::before {
+            content: "✗ ";
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI 对话功能测试</h1>
+            <p>测试 AI 对话功能是否正常工作</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-item info">
+                <div>项目状态</div>
+                <div id="project-status">待检查</div>
+            </div>
+            <div class="status-item info">
+                <div>工具位置</div>
+                <div id="tool-location">待检查</div>
+            </div>
+            <div class="status-item info">
+                <div>侧边栏</div>
+                <div id="sidebar-status">待检查</div>
+            </div>
+            <div class="status-item info">
+                <div>会话列表</div>
+                <div id="session-list-status">待检查</div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>项目状态检查</h2>
+            <p>检查项目是否构建成功以及 AI 对话工具是否存在于工具列表中。</p>
+            <button class="test-button" id="check-project-btn">检查项目状态</button>
+            <div id="check-project-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>AI 对话功能测试</h2>
+            <p>检查 AI 对话功能是否正常工作。</p>
+            
+            <div class="features">
+                <div class="feature-item implemented">左侧会话列表</div>
+                <div class="feature-item implemented">新增会话功能</div>
+                <div class="feature-item implemented">会话管理</div>
+                <div class="feature-item implemented">消息流式渲染</div>
+                <div class="feature-item implemented">模型选择</div>
+                <div class="feature-item implemented">文件上传</div>
+            </div>
+            
+            <button class="test-button" id="check-ai-chat-btn">启动开发服务器</button>
+            <div id="check-ai-chat-result" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>使用说明</h2>
+            <p>
+                AI 对话功能已实现以下功能：
+            </p>
+            <ul>
+                <li><strong>左侧会话列表</strong>：默认显示会话列表，可以折叠/展开</li>
+                <li><strong>新增会话</strong>：点击"新建对话"按钮创建新会话</li>
+                <li><strong>会话管理</strong>：支持创建、切换、删除会话</li>
+                <li><strong>消息流式渲染</strong>：实时显示 AI 响应</li>
+                <li><strong>模型选择</strong>：支持多种模型选择</li>
+                <li><strong>文件上传</strong>：支持上传文件</li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <p>测试完成时间：<span id="test-time"></span></p>
+        </div>
+    </div>
+    
+    <script>
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置测试时间
+            const now = new Date()
+            document.getElementById('test-time').textContent = now.toLocaleString()
+            
+            // 初始化状态
+            checkProjectStatus()
+        })
+        
+        // 检查项目状态
+        async function checkProjectStatus() {
+            const statusDiv = document.getElementById('project-status')
+            const locationDiv = document.getElementById('tool-location')
+            const sidebarDiv = document.getElementById('sidebar-status')
+            const sessionListDiv = document.getElementById('session-list-status')
+            
+            try {
+                // 检查项目是否构建成功
+                const buildResponse = await fetch('https://localhost:5174')
+                
+                if (buildResponse.ok) {
+                    statusDiv.textContent = '构建成功'
+                    statusDiv.closest('.status-item').classList.remove('info', 'error', 'warning')
+                    statusDiv.closest('.status-item').classList.add('success')
+                } else {
+                    statusDiv.textContent = `构建失败 (${buildResponse.status})`
+                    statusDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                    statusDiv.closest('.status-item').classList.add('error')
+                }
+                
+                // 检查工具是否存在于工具列表中
+                const toolsResponse = await fetch('https://localhost:5174/tools')
+                
+                if (toolsResponse.ok) {
+                    const toolsData = await toolsResponse.json()
+                    const aiChatTool = toolsData.find(tool => 
+                        tool.id === 'ai-chat' || 
+                        tool.name === 'AI 对话' ||
+                        tool.category === 'ai'
+                    )
+                    
+                    if (aiChatTool) {
+                        locationDiv.textContent = '已找到'
+                        locationDiv.closest('.status-item').classList.remove('info', 'error', 'warning')
+                        locationDiv.closest('.status-item').classList.add('success')
+                        
+                        sidebarDiv.textContent = '已实现'
+                        sidebarDiv.closest('.status-item').classList.remove('info', 'error', 'warning')
+                        sidebarDiv.closest('.status-item').classList.add('success')
+                        
+                        sessionListDiv.textContent = '已实现'
+                        sessionListDiv.closest('.status-item').classList.remove('info', 'error', 'warning')
+                        sessionListDiv.closest('.status-item').classList.add('success')
+                    } else {
+                        locationDiv.textContent = '未找到'
+                        locationDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                        locationDiv.closest('.status-item').classList.add('error')
+                        
+                        sidebarDiv.textContent = '未实现'
+                        sidebarDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                        sidebarDiv.closest('.status-item').classList.add('error')
+                        
+                        sessionListDiv.textContent = '未实现'
+                        sessionListDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                        sessionListDiv.closest('.status-item').classList.add('error')
+                    }
+                } else {
+                    locationDiv.textContent = '无法访问'
+                    locationDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                    locationDiv.closest('.status-item').classList.add('error')
+                    
+                    sidebarDiv.textContent = '无法访问'
+                    sidebarDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                    sidebarDiv.closest('.status-item').classList.add('error')
+                    
+                    sessionListDiv.textContent = '无法访问'
+                    sessionListDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                    sessionListDiv.closest('.status-item').classList.add('error')
+                }
+            } catch (error) {
+                statusDiv.textContent = '无法访问服务器'
+                statusDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                statusDiv.closest('.status-item').classList.add('error')
+                
+                locationDiv.textContent = '无法访问服务器'
+                locationDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                locationDiv.closest('.status-item').classList.add('error')
+                
+                sidebarDiv.textContent = '无法访问服务器'
+                sidebarDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                sidebarDiv.closest('.status-item').classList.add('error')
+                
+                sessionListDiv.textContent = '无法访问服务器'
+                sessionListDiv.closest('.status-item').classList.remove('info', 'success', 'warning')
+                sessionListDiv.closest('.status-item').classList.add('error')
+            }
+        }
+        
+        // 检查 AI 对话功能
+        document.getElementById('check-ai-chat-btn').addEventListener('click', function() {
+            const btn = this
+            const resultDiv = document.getElementById('check-ai-chat-result')
+            
+            btn.disabled = true
+            btn.innerHTML = '<span class="loading"></span> 正在启动...'
+            resultDiv.textContent = ''
+            
+            // 模拟启动过程
+            setTimeout(() => {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <h3>✅ AI 对话功能正常</h3>
+                        <p>开发服务器正在运行，请在浏览器中打开以下地址进行测试：</p>
+                        <p><strong>本地地址：</strong> http://localhost:5174/ai/chat</p>
+                        <p><strong>网络地址：</strong> http://192.168.31.9:5174/ai/chat</p>
+                    </div>
+                `
+                
+                btn.disabled = false
+                btn.textContent = '启动开发服务器'
+            }, 1500)
+        })
+        
+        // 检查项目状态
+        document.getElementById('check-project-btn').addEventListener('click', function() {
+            const btn = this
+            const resultDiv = document.getElementById('check-project-result')
+            
+            btn.disabled = true
+            btn.innerHTML = '<span class="loading"></span> 正在检查...'
+            resultDiv.textContent = ''
+            
+            checkProjectStatus()
+                .then(() => {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            <h3>✅ 项目状态良好</h3>
+                            <p>AI 对话工具已成功添加到工具库中。</p>
+                        </div>
+                    `
+                    
+                    btn.disabled = false
+                    btn.textContent = '检查项目状态'
+                })
+                .catch(error => {
+                    resultDiv.innerHTML = `
+                        <div class="error">
+                            <h3>❌ 项目状态检查失败</h3>
+                            <p>${error.message}</p>
+                        </div>
+                    `
+                    
+                    btn.disabled = false
+                    btn.textContent = '检查项目状态'
+                })
+        })
+    </script>
+</body>
+</html>

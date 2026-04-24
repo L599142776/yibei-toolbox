@@ -843,7 +843,7 @@ const toolModules: ToolManifest[] = [
   {
     id: 'ai-chat',
     name: 'AI 对话',
-    description: '基于太极 API 的 AI 对话工具，支持 GPT 系列模型流式输出',
+    description: 'AI 对话工具，支持多种模型流式输出',
     category: 'ai',
     icon: 'Bot',
     keywords: ['AI', 'ChatGPT', 'GPT', '对话', 'ai', 'chat', 'gpt'],

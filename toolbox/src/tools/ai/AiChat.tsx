@@ -1,5 +1,5 @@
 // src/tools/ai/AiChat.tsx
-// AI 对话 - 完整实现
+// AI 对话 - 重新设计布局
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import {
@@ -8,15 +8,14 @@ import {
   User,
   X,
   Copy,
-  RefreshCw,
   Loader2,
   Plus,
   Trash2,
-  ChevronDown,
   Paperclip,
-  Square as StopIcon,
+  Square,
+  MessageSquare,
 } from 'lucide-react'
-import ToolLayout from '../../components/ToolLayout'
+import { marked } from 'marked'
 import {
   type ChatMessage,
   type ModelInfo,
@@ -28,36 +27,33 @@ import {
   createSession,
   fetchMessageRecords,
   sendChatMessage,
-  setTemplateConfig,
-  getSessionId,
-  setSessionId,
+  deleteSession,
   groupModelsByTag,
   messagesToChatMessages,
   validateFiles,
   fileToBase64,
-  deleteSession,
 } from './chatApi'
 
 export default function AiChat() {
   // ============================================================
-  // 认证状态
+  // 认证
   // ============================================================
   const [isLoggingIn, setIsLoggingIn] = useState(true)
   const [loginError, setLoginError] = useState('')
 
   // ============================================================
-  // 配置数据
+  // 配置
   // ============================================================
   const [config, setConfig] = useState<TemplateConfig | null>(null)
   const [modelGroups, setModelGroups] = useState<Map<string, ModelInfo[]>>(new Map())
 
   // ============================================================
-  // 模型选择
+  // 模型
   // ============================================================
   const [selectedModel, setSelectedModel] = useState('')
 
   // ============================================================
-  // 会话管理
+  // 会话
   // ============================================================
   const [sessions, setSessions] = useState<Session[]>([])
   const [currentSession, setCurrentSession] = useState<Session | null>(null)
@@ -67,7 +63,7 @@ export default function AiChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
   // ============================================================
-  // 消息状态
+  // 消息
   // ============================================================
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
@@ -75,11 +71,40 @@ export default function AiChat() {
   const [error, setError] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [showTokens, setShowTokens] = useState(false)
-  const [abortController, setAbortController] = useState<AbortController | null>(null)
 
+  // ============================================================
   // Refs
+  // ============================================================
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // ============================================================
+  // 初始化
+  // ============================================================
+  useEffect(() => {
+    const initChat = async () => {
+      setIsLoggingIn(true)
+      setLoginError('')
+
+      try {
+        await login()
+
+        const templateConfig = await fetchTemplateConfig()
+        setConfig(templateConfig)
+        setModelGroups(groupModelsByTag(templateConfig.models))
+        setSelectedModel(templateConfig.defModel)
+        setShowTokens(templateConfig.showTokens)
+
+        await loadSessions(1)
+      } catch (err) {
+        setLoginError(err instanceof Error ? err.message : '登录失败')
+      } finally {
+        setIsLoggingIn(false)
+      }
+    }
+
+    initChat()
+  }, [])
 
   // ============================================================
   // 滚动到底部
@@ -93,89 +118,43 @@ export default function AiChat() {
   }, [messages, scrollToBottom])
 
   // ============================================================
-  // 初始化
-  // ============================================================
-  useEffect(() => {
-    const initChat = async () => {
-      setIsLoggingIn(true)
-      setLoginError('')
-
-      try {
-        // 1. 登录
-        await login()
-
-        // 2. 获取模板配置
-        const templateConfig = await fetchTemplateConfig()
-        setConfig(templateConfig)
-        setTemplateConfig(templateConfig)
-
-        // 3. 按标签分组模型
-        const groups = groupModelsByTag(templateConfig.models)
-        setModelGroups(groups)
-
-        // 4. 设置默认模型
-        setSelectedModel(templateConfig.defModel)
-
-        // 5. 获取会话列表
-        await loadSessions(1)
-
-        // 6. Token 显示开关
-        setShowTokens(templateConfig.showTokens)
-      } catch (err) {
-        setLoginError(err instanceof Error ? err.message : '登录失败')
-      } finally {
-        setIsLoggingIn(false)
-      }
-    }
-
-    initChat()
-  }, [])
-
-  // ============================================================
-  // 加载会话列表
+  // 会话管理
   // ============================================================
   const loadSessions = async (page: number) => {
     setSessionsLoading(true)
+
     try {
       const data = await fetchSessionList(page)
+
       if (page === 1) {
         setSessions(data.records)
       } else {
         setSessions((prev) => [...prev, ...data.records])
       }
-      setHasMoreSessions(page < data.pages)
+
+      setHasMoreSessions(page < 10)
       setSessionsPage(page)
     } catch (err) {
-      console.error('加载会话列表失败:', err)
+      console.error('加载会话失败:', err)
     } finally {
       setSessionsLoading(false)
     }
   }
 
-  // ============================================================
-  // 切换会话
-  // ============================================================
   const switchSession = async (session: Session) => {
     if (currentSession?.id === session.id) return
 
     setCurrentSession(session)
-    setSessionId(session.id)
-    setSelectedModel(session.model)
 
-    // 加载消息记录
     try {
       const data = await fetchMessageRecords(session.id, 1)
-      const chatMessages = messagesToChatMessages(data.records)
-      setMessages(chatMessages)
+      setMessages(messagesToChatMessages(data.records))
     } catch (err) {
-      console.error('加载消息记录失败:', err)
+      console.error('加载消息失败:', err)
       setMessages([])
     }
   }
 
-  // ============================================================
-  // 创建新会话
-  // ============================================================
   const handleNewSession = async () => {
     try {
       const newSession = await createSession(selectedModel)
@@ -187,27 +166,21 @@ export default function AiChat() {
     }
   }
 
-  // ============================================================
-  // 删除会话
-  // ============================================================
   const handleDeleteSession = async (sessionId: number, e: React.MouseEvent) => {
     e.stopPropagation()
 
     try {
-      // 调用后端删除接口
       await deleteSession(sessionId)
 
-      // 前端删除
       setSessions((prev) => prev.filter((s) => s.id !== sessionId))
 
-      // 如果删除的是当前会话，切换到第一会话
       if (currentSession?.id === sessionId) {
         const remaining = sessions.filter((s) => s.id !== sessionId)
+
         if (remaining.length > 0) {
           switchSession(remaining[0])
         } else {
           setCurrentSession(null)
-          setSessionId(0)
           setMessages([])
         }
       }
@@ -218,165 +191,7 @@ export default function AiChat() {
   }
 
   // ============================================================
-  // 发送消息
-  // ============================================================
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
-    if (!config) return
-
-    // 验证文件
-    const validation = validateFiles(files, config)
-    if (!validation.valid) {
-      setError(validation.error || '文件验证失败')
-      return
-    }
-
-    const userText = input.trim()
-    const currentSessionId = getSessionId()
-
-    // 如果没有会话，先创建
-    let sessionId = currentSessionId
-    if (!sessionId) {
-      try {
-        const newSession = await createSession(selectedModel)
-        setSessions((prev) => [newSession, ...prev])
-        switchSession(newSession)
-        sessionId = newSession.id
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '创建会话失败')
-        return
-      }
-    }
-
-    // 添加用户消息
-    const userMessage: ChatMessage = {
-      role: 'user',
-      content: userText,
-      timestamp: new Date().toISOString(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-    setError('')
-
-    // 创建 AbortController
-    const controller = new AbortController()
-    setAbortController(controller)
-
-    // 添加空的 assistant 消息
-    setMessages((prev) => [
-      ...prev,
-      { role: 'assistant', content: '' },
-    ])
-
-    // 准备文件（Base64）
-    const fileBase64s: string[] = []
-    for (const file of files) {
-      try {
-        const base64 = await fileToBase64(file)
-        fileBase64s.push(base64)
-      } catch {
-        console.error('文件转换失败:', file.name)
-      }
-    }
-
-    try {
-      await sendChatMessage(
-        userText,
-        sessionId!,
-        fileBase64s,
-        {
-          onChunk: (chunk) => {
-            // 流式更新最后一条消息
-            setMessages((prev) => {
-              const updated = [...prev]
-              const lastIdx = updated.length - 1
-              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
-                updated[lastIdx] = {
-                  ...updated[lastIdx],
-                  content: updated[lastIdx].content + chunk,
-                }
-              }
-              return updated
-            })
-          },
-          onComplete: (finalData) => {
-            // 流结束，更新 Token 信息
-            if (finalData) {
-              setMessages((prev) => {
-                const updated = [...prev]
-                const lastIdx = updated.length - 1
-                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
-                  updated[lastIdx] = {
-                    ...updated[lastIdx],
-                    content: finalData.aiText || updated[lastIdx].content,
-                    tokens: {
-                      promptTokens: finalData.promptTokens,
-                      completionTokens: finalData.completionTokens,
-                      contextTokens: finalData.contextTokens,
-                      useTokens: finalData.useTokens,
-                      deductCount: finalData.deductCount,
-                    },
-                  }
-                }
-                return updated
-              })
-            }
-          },
-          onError: (err) => {
-            setError(err.message)
-          },
-        }
-      )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '请求失败')
-    } finally {
-      setIsLoading(false)
-      setAbortController(null)
-      setFiles([])
-    }
-  }
-
-  // ============================================================
-  // 停止生成
-  // ============================================================
-  const handleStop = () => {
-    if (abortController) {
-      abortController.abort()
-      setIsLoading(false)
-    }
-  }
-
-  // ============================================================
-  // 键盘提交
-  // ============================================================
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
-
-  // ============================================================
-  // 清空对话
-  // ============================================================
-  const handleClear = () => {
-    setMessages([])
-    setError('')
-    setCurrentSession(null)
-    setSessionId(0)
-  }
-
-  // ============================================================
-  // 复制消息
-  // ============================================================
-  const handleCopy = (content: string) => {
-    navigator.clipboard.writeText(content)
-  }
-
-  // ============================================================
-  // 文件选择
+  // 文件处理
   // ============================================================
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || [])
@@ -385,19 +200,149 @@ export default function AiChat() {
   }
 
   // ============================================================
+  // 聊天
+  // ============================================================
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return
+    if (!config) return
+
+    const validation = validateFiles(files, config)
+    if (!validation.valid) {
+      setError(validation.error || '文件验证失败')
+      return
+    }
+
+    const userText = input.trim()
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: userText,
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
+    setError('')
+
+    const assistantMessage: ChatMessage = {
+      role: 'assistant',
+      content: '',
+    }
+    setMessages((prev) => [...prev, assistantMessage])
+
+    const fileInfos = []
+    for (const file of files) {
+      try {
+        const base64 = await fileToBase64(file)
+        fileInfos.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          base64,
+        })
+      } catch {
+        console.error('文件转换失败:', file.name)
+      }
+    }
+
+    try {
+      await sendChatMessage({
+        text: userText,
+        sessionId: currentSession?.id,
+        files: fileInfos,
+        onChunk: (chunk) => {
+          setMessages((prev) => {
+            const updated = [...prev]
+            const lastIdx = updated.length - 1
+
+            if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+              updated[lastIdx] = {
+                ...updated[lastIdx],
+                content: updated[lastIdx].content + chunk,
+              }
+            }
+
+            return updated
+          })
+        },
+        onComplete: () => {
+          setIsLoading(false)
+        },
+        onFinal: (finalData) => {
+          if (finalData) {
+            setMessages((prev) => {
+              const updated = [...prev]
+              const lastIdx = updated.length - 1
+
+              if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                updated[lastIdx] = {
+                  ...updated[lastIdx],
+                  tokens: {
+                    promptTokens: finalData.promptTokens,
+                    completionTokens: finalData.completionTokens,
+                    useTokens: finalData.useTokens,
+                    deductCount: finalData.deductCount,
+                  },
+                }
+              }
+
+              return updated
+            })
+          }
+        },
+        onError: (err) => {
+          setError(err.message)
+          setIsLoading(false)
+        },
+      })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '发送失败')
+      setIsLoading(false)
+    } finally {
+      setFiles([])
+    }
+  }
+
+  const handleStop = () => {
+    const controller = new AbortController()
+    controller.abort()
+    setIsLoading(false)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleClear = () => {
+    setMessages([])
+    setError('')
+    setCurrentSession(null)
+  }
+
+
+
+  // ============================================================
   // 渲染
   // ============================================================
 
-  // 登录中
   if (isLoggingIn) {
     return (
-      <ToolLayout title="AI 对话" description="基于太极 API 的 AI 对话工具">
+      <div className="ai-chat-page">
         <div className="ai-chat-loading">
           <Loader2 size={48} className="spinning" />
-          <p>登录中...</p>
+          <p>加载中...</p>
         </div>
 
         <style>{`
+          .ai-chat-page {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+
           .ai-chat-loading {
             display: flex;
             flex-direction: column;
@@ -407,20 +352,23 @@ export default function AiChat() {
             padding: 48px;
             color: var(--color-text-secondary);
           }
-          .spinning { animation: spin 1s linear infinite; }
+
+          .spinning {
+            animation: spin 1s linear infinite;
+          }
+
           @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
           }
         `}</style>
-      </ToolLayout>
+      </div>
     )
   }
 
-  // 登录失败
   if (loginError) {
     return (
-      <ToolLayout title="AI 对话" description="登录失败">
+      <div className="ai-chat-page">
         <div className="ai-chat-error">
           <p>登录失败</p>
           <p className="error-text">{loginError}</p>
@@ -430,6 +378,12 @@ export default function AiChat() {
         </div>
 
         <style>{`
+          .ai-chat-page {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+
           .ai-chat-error {
             display: flex;
             flex-direction: column;
@@ -438,20 +392,21 @@ export default function AiChat() {
             padding: 48px;
             text-align: center;
           }
-          .error-text { color: var(--color-error); font-size: 14px; }
+
+          .error-text {
+            color: var(--color-error);
+            font-size: 14px;
+          }
         `}</style>
-      </ToolLayout>
+      </div>
     )
   }
 
   return (
-    <ToolLayout
-      title="AI 对话"
-      description={`会话: ${currentSession?.name || '新对话'} | 模型: ${selectedModel}`}
-    >
-      <div className="ai-chat-container">
-        {/* 侧边栏 - 会话列表 */}
-        <div className={`chat-sidebar ${sidebarOpen ? 'open' : ''}`}>
+    <div className="ai-chat-page">
+      {/* 侧边栏 */}
+      {sidebarOpen && (
+        <div className="chat-sidebar">
           <div className="sidebar-header">
             <button className="btn-new-session" onClick={handleNewSession}>
               <Plus size={16} />
@@ -463,6 +418,11 @@ export default function AiChat() {
             {sessionsLoading && sessions.length === 0 ? (
               <div className="loading-placeholder">
                 <Loader2 size={20} className="spinning" />
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="session-empty">
+                <MessageSquare size={24} />
+                <span>暂无对话</span>
               </div>
             ) : (
               sessions.map((session) => (
@@ -491,7 +451,6 @@ export default function AiChat() {
               ))
             )}
 
-            {/* 无限滚动加载 */}
             {hasMoreSessions && !sessionsLoading && (
               <div className="load-more" onClick={() => loadSessions(sessionsPage + 1)}>
                 加载更多
@@ -499,215 +458,203 @@ export default function AiChat() {
             )}
           </div>
         </div>
+      )}
 
-        {/* 切换侧边栏按钮 */}
-        <button
-          className="btn-toggle-sidebar"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-        >
-          {sidebarOpen ? <ChevronDown size={16} /> : <ChevronDown size={16} />}
-        </button>
+      {/* 主聊天区域 */}
+      <div className="chat-main">
+        {/* 顶部栏 */}
+        <div className="chat-header">
+          <button
+            className="btn-toggle-sidebar"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            title={sidebarOpen ? '隐藏侧边栏' : '显示侧边栏'}
+          >
+            <MessageSquare size={18} />
+          </button>
 
-        {/* 主聊天区域 */}
-        <div className="chat-main">
-          {/* 顶部栏 */}
-          <div className="chat-header">
-            <div className="header-left">
-              {/* 模型选择器 */}
-              <div className="model-selector">
-                <select
-                  value={selectedModel}
-                  onChange={(e) => setSelectedModel(e.target.value)}
-                  className="tool-select"
-                >
-                  {Array.from(modelGroups.entries()).map(([tag, models]) => (
-                    <optgroup key={tag} label={tag}>
-                      {models.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <button
-                  className="btn-icon"
-                  onClick={() =>
-                    fetchTemplateConfig().then((c) => {
-                      setConfig(c)
-                      setModelGroups(groupModelsByTag(c.models))
-                    })
-                  }
-                  title="刷新模型"
-                >
-                  <RefreshCw size={14} />
-                </button>
+          <div className="header-left">
+            <div className="model-selector">
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="tool-select"
+              >
+                {Array.from(modelGroups.entries()).map(([tag, models]) => (
+                  <optgroup key={tag} label={tag}>
+                    {models.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="header-right">
+            <button className="btn-icon" onClick={handleClear} title="清空对话">
+              <Trash2 size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* 错误提示 */}
+        {error && (
+          <div className="error-banner">
+            <p>{error}</p>
+            <button className="btn-close" onClick={() => setError('')}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {/* 消息列表 */}
+        <div className="chat-messages">
+          {messages.length === 0 && (
+            <div className="chat-welcome">
+              <Bot size={48} />
+              <div
+                className="welcome-text"
+                dangerouslySetInnerHTML={{
+                  __html: config?.defaultChat || '您好，有什么可以帮助您的吗？',
+                }}
+              />
+              <p className="model-hint">当前模型: {selectedModel}</p>
+            </div>
+          )}
+
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`chat-message ${msg.role}`}>
+              <div className="message-avatar">
+                {msg.role === 'user' ? <User size={24} /> : <Bot size={24} />}
               </div>
-
-              {/* 文件按钮 */}
-              {config && config.mFileCount > 0 && (
-                <label className="btn-icon" title="添加文件">
-                  <Paperclip size={14} />
-                  <input
-                    type="file"
-                    multiple
-                    onChange={handleFileSelect}
-                    style={{ display: 'none' }}
+              <div className="message-content">
+                {msg.content ? (
+                  <div
+                    className="markdown-content"
+                    dangerouslySetInnerHTML={{ __html: marked.parse(msg.content) as string }}
                   />
-                </label>
+                ) : (
+                  msg.role === 'assistant' && isLoading && idx === messages.length - 1
+                    ? '正在思考...'
+                    : ''
+                )}
+              </div>
+              {msg.content && (
+                <div className="message-actions">
+                  <button
+                    className="btn-copy"
+                    onClick={() => navigator.clipboard.writeText(msg.content!)}
+                    title="复制"
+                  >
+                    <Copy size={16} />
+                  </button>
+                </div>
               )}
 
-              {/* 已选文件显示 */}
-              {files.length > 0 && (
-                <div className="selected-files">
-                  {files.map((file, idx) => (
-                    <span key={idx} className="file-tag">
-                      {file.name}
-                      <X
-                        size={12}
-                        onClick={() =>
-                          setFiles((prev) => prev.filter((_, i) => i !== idx))
-                        }
-                      />
-                    </span>
-                  ))}
+              {showTokens && msg.tokens && msg.role === 'assistant' && (
+                <div className="token-info">
+                  <span>消耗: {msg.tokens.useTokens} tokens</span>
                 </div>
               )}
             </div>
+          ))}
 
-            <div className="header-right">
-              {/* 新建会话 */}
-              <button className="btn-icon" onClick={handleNewSession} title="新建会话">
-                <Plus size={14} />
-              </button>
+          <div ref={messagesEndRef} />
+        </div>
 
-              {/* 清空对话 */}
-              <button className="btn-icon" onClick={handleClear} title="清空对话">
-                <Trash2 size={14} />
-              </button>
-            </div>
-          </div>
+        {/* 底部输入区 */}
+        <div className="chat-input-area">
+          {isLoading && (
+            <button className="btn-stop" onClick={handleStop}>
+              <Square size={16} />
+              <span>停止</span>
+            </button>
+          )}
 
-          {/* 错误提示 */}
-          {error && <div className="error-banner">{error}</div>}
-
-          {/* 消息列表 */}
-          <div className="chat-messages">
-            {messages.length === 0 && (
-              <div className="chat-welcome">
-                <Bot size={48} />
-                <div
-                  className="welcome-text"
-                  dangerouslySetInnerHTML={{
-                    __html: config?.defaultChat || '您好，有什么可以帮助您的吗？',
-                  }}
-                />
-                <p className="model-hint">当前模型: {selectedModel}</p>
-              </div>
-            )}
-
-            {messages.map((msg, idx) => (
-              <div key={idx} className={`chat-message ${msg.role}`}>
-                <div className="message-avatar">
-                  {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-                </div>
-                <div className="message-content">
-                  {msg.content ||
-                    (msg.role === 'assistant' && isLoading && idx === messages.length - 1
-                      ? '思考中...'
-                      : '')}
-                </div>
-                {msg.content && (
-                  <div className="message-actions">
-                    <button
-                      className="btn-copy"
-                      onClick={() => handleCopy(msg.content!)}
-                      title="复制"
-                    >
-                      <Copy size={12} />
-                    </button>
-                  </div>
-                )}
-
-                {/* Token 信息 */}
-                {showTokens && msg.tokens && msg.role === 'assistant' && (
-                  <div className="token-info">
-                    <span>消耗: {msg.tokens.useTokens} tokens</span>
-                    <span>
-                      (P: {msg.tokens.promptTokens} + C:{' '}
-                      {msg.tokens.completionTokens})
-                    </span>
-                  </div>
-                )}
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* 底部输入区 */}
-          <div className="chat-input-area">
-            {/* 停止按钮 */}
-            {isLoading && (
-              <button className="btn-stop" onClick={handleStop}>
-                <StopIcon size={16} />
-                <span>停止</span>
-              </button>
-            )}
-
+          <div className="input-wrapper">
             <textarea
               ref={inputRef}
               className="chat-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"
+              placeholder="输入消息..."
               disabled={isLoading}
-              rows={2}
+              rows={1}
+              style={{
+                height: Math.min(120, Math.max(40, input.split('\n').length * 20)),
+              }}
             />
+          </div>
+
+          <div className="input-actions">
+            <label className="btn-icon" title="添加文件">
+              <Paperclip size={18} />
+              <input
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                style={{ display: 'none' }}
+              />
+            </label>
 
             <button
               className="btn-send"
               onClick={isLoading ? handleStop : handleSend}
               disabled={!isLoading && !input.trim()}
+              title={isLoading ? '停止' : '发送'}
             >
-              {isLoading ? <StopIcon size={18} /> : <Send size={18} />}
+              {isLoading ? <Square size={18} /> : <Send size={18} />}
             </button>
           </div>
 
-          {/* 底部提示 */}
-          {config?.tooltipsText && (
-            <div
-              className="tooltips-text"
-              dangerouslySetInnerHTML={{ __html: config.tooltipsText }}
-            />
+          {files.length > 0 && (
+            <div className="selected-files">
+              {files.map((file, idx) => (
+                <span key={idx} className="file-tag">
+                  {file.name}
+                  <button
+                    className="btn-remove-file"
+                    onClick={() => setFiles((prev) => prev.filter((_, i) => i !== idx))}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
           )}
         </div>
+
+        {/* 底部提示 */}
+        {config?.tooltipsText && (
+          <div
+            className="tooltips-text"
+            dangerouslySetInnerHTML={{ __html: config.tooltipsText }}
+          />
+        )}
       </div>
 
       <style>{`
-        .ai-chat-container {
+        .ai-chat-page {
+          height: 100%;
           display: flex;
-          height: calc(100vh - 120px);
-          min-height: 500px;
-          position: relative;
+          overflow: hidden;
+          background: var(--color-bg);
         }
 
         /* 侧边栏 */
         .chat-sidebar {
-          width: 240px;
+          width: 280px;
           border-right: 1px solid var(--color-border);
-          background: var(--color-bg);
+          background: var(--color-bg-secondary);
           display: flex;
           flex-direction: column;
-          transition: margin-left 0.3s;
-        }
-
-        .chat-sidebar:not(.open) {
-          margin-left: -240px;
         }
 
         .sidebar-header {
-          padding: 12px;
+          padding: 16px;
           border-bottom: 1px solid var(--color-border);
         }
 
@@ -721,9 +668,10 @@ export default function AiChat() {
           background: var(--color-primary);
           color: white;
           border: none;
-          border-radius: 6px;
+          border-radius: 8px;
           cursor: pointer;
           font-size: 14px;
+          font-weight: 500;
         }
 
         .btn-new-session:hover {
@@ -736,18 +684,30 @@ export default function AiChat() {
           padding: 8px;
         }
 
+        .session-empty {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 32px;
+          color: var(--color-text-secondary);
+          font-size: 14px;
+        }
+
         .session-item {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 10px 12px;
-          border-radius: 6px;
+          padding: 12px;
+          border-radius: 8px;
           cursor: pointer;
           margin-bottom: 4px;
+          transition: background 0.2s;
         }
 
         .session-item:hover {
-          background: var(--color-bg-secondary);
+          background: var(--color-bg);
         }
 
         .session-item.active {
@@ -756,9 +716,10 @@ export default function AiChat() {
         }
 
         .session-info {
+          flex: 1;
           display: flex;
           flex-direction: column;
-          gap: 2px;
+          gap: 4px;
           overflow: hidden;
         }
 
@@ -771,7 +732,11 @@ export default function AiChat() {
 
         .session-time {
           font-size: 12px;
-          opacity: 0.7;
+          color: var(--color-text-secondary);
+        }
+
+        .session-item.active .session-time {
+          color: rgba(255, 255, 255, 0.7);
         }
 
         .btn-delete-session {
@@ -780,11 +745,16 @@ export default function AiChat() {
           border: none;
           color: inherit;
           cursor: pointer;
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+
+        .session-item:hover .btn-delete-session {
           opacity: 0.7;
         }
 
         .btn-delete-session:hover {
-          opacity: 1;
+          opacity: 1 !important;
         }
 
         .load-more {
@@ -801,30 +771,6 @@ export default function AiChat() {
           padding: 24px;
         }
 
-        /* 切换侧边栏按钮 */
-        .btn-toggle-sidebar {
-          position: absolute;
-          left: 0;
-          top: 50%;
-          transform: translateY(-50%);
-          z-index: 10;
-          padding: 8px 4px;
-          background: var(--color-bg);
-          border: 1px solid var(--color-border);
-          border-left: none;
-          border-radius: 0 4px 4px 0;
-          cursor: pointer;
-          color: var(--color-text-secondary);
-        }
-
-        .chat-sidebar:not(.open) + .btn-toggle-sidebar {
-          left: 0;
-        }
-
-        .chat-sidebar.open + .btn-toggle-sidebar {
-          left: 240px;
-        }
-
         /* 主聊天区域 */
         .chat-main {
           flex: 1;
@@ -835,16 +781,28 @@ export default function AiChat() {
 
         .chat-header {
           display: flex;
-          justify-content: space-between;
           align-items: center;
-          padding: 8px 12px;
+          padding: 12px 16px;
           border-bottom: 1px solid var(--color-border);
-          gap: 8px;
-          flex-wrap: wrap;
+          gap: 12px;
         }
 
-        .header-left,
-        .header-right {
+        .btn-toggle-sidebar {
+          padding: 8px;
+          background: transparent;
+          border: none;
+          color: var(--color-text-secondary);
+          cursor: pointer;
+          border-radius: 6px;
+          transition: background 0.2s;
+        }
+
+        .btn-toggle-sidebar:hover {
+          background: var(--color-bg-secondary);
+        }
+
+        .header-left {
+          flex: 1;
           display: flex;
           align-items: center;
           gap: 8px;
@@ -857,54 +815,49 @@ export default function AiChat() {
         }
 
         .tool-select {
-          padding: 6px 12px;
+          padding: 8px 12px;
           border: 1px solid var(--color-border);
-          border-radius: 6px;
+          border-radius: 8px;
           background: var(--color-bg);
           color: var(--color-text);
           font-size: 14px;
-          min-width: 180px;
+          min-width: 160px;
+          cursor: pointer;
+        }
+
+        .tool-select:focus {
+          outline: none;
+          border-color: var(--color-primary);
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
 
         .btn-icon {
-          padding: 6px;
-          border: none;
+          padding: 8px;
           background: transparent;
+          border: none;
           color: var(--color-text-secondary);
           cursor: pointer;
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
+          border-radius: 6px;
+          transition: background 0.2s;
         }
 
         .btn-icon:hover {
           background: var(--color-bg-secondary);
         }
 
-        .selected-files {
-          display: flex;
-          gap: 4px;
-          flex-wrap: wrap;
-        }
-
-        .file-tag {
-          display: flex;
-          align-items: center;
-          gap: 4px;
-          padding: 2px 8px;
-          background: var(--color-bg-secondary);
-          border-radius: 4px;
-          font-size: 12px;
-        }
-
-        /* 消息区域 */
+        /* 消息列表 */
         .chat-messages {
           flex: 1;
           overflow-y: auto;
-          padding: 16px;
+          padding: 24px;
           display: flex;
           flex-direction: column;
-          gap: 16px;
+          gap: 20px;
         }
 
         .chat-welcome {
@@ -921,18 +874,20 @@ export default function AiChat() {
           font-size: 16px;
           text-align: center;
           max-width: 400px;
+          line-height: 1.6;
         }
 
         .model-hint {
-          font-size: 12px;
+          font-size: 13px;
           color: var(--color-primary);
+          margin-top: 8px;
         }
 
         .chat-message {
           display: flex;
           gap: 12px;
           align-items: flex-start;
-          max-width: 85%;
+          max-width: 75%;
         }
 
         .chat-message.user {
@@ -957,15 +912,16 @@ export default function AiChat() {
 
         .chat-message.assistant .message-avatar {
           background: var(--color-bg-secondary);
-          color: var(--color-text-secondary);
+          color: var(--color-primary);
         }
 
         .message-content {
-          padding: 10px 14px;
-          border-radius: 12px;
+          padding: 12px 16px;
+          border-radius: 16px;
           white-space: pre-wrap;
           word-break: break-word;
-          line-height: 1.5;
+          line-height: 1.6;
+          font-size: 15px;
         }
 
         .chat-message.user .message-content {
@@ -980,8 +936,6 @@ export default function AiChat() {
         }
 
         .message-actions {
-          display: flex;
-          gap: 4px;
           opacity: 0;
           transition: opacity 0.2s;
         }
@@ -992,49 +946,89 @@ export default function AiChat() {
 
         .btn-copy {
           padding: 4px;
-          border: none;
           background: transparent;
+          border: none;
           color: var(--color-text-secondary);
           cursor: pointer;
           border-radius: 4px;
+        }
+
+        .btn-copy:hover {
+          background: var(--color-bg-secondary);
         }
 
         .token-info {
           font-size: 12px;
           color: var(--color-text-secondary);
           padding: 4px 12px;
-          display: flex;
-          gap: 8px;
         }
 
+        /* 错误提示 */
         .error-banner {
-          margin: 8px 12px;
-          padding: 8px 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin: 8px 16px;
+          padding: 10px 14px;
           background: var(--color-error);
           color: white;
-          border-radius: 6px;
+          border-radius: 8px;
           font-size: 14px;
+        }
+
+        .btn-close {
+          padding: 4px;
+          background: transparent;
+          border: none;
+          color: white;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+
+        .btn-close:hover {
+          background: rgba(255, 255, 255, 0.1);
         }
 
         /* 输入区 */
         .chat-input-area {
           display: flex;
+          flex-direction: column;
           gap: 8px;
-          padding: 12px;
+          padding: 16px;
           border-top: 1px solid var(--color-border);
+        }
+
+        .btn-stop {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 8px 12px;
+          background: var(--color-error);
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          width: fit-content;
+        }
+
+        .input-wrapper {
+          display: flex;
+          gap: 10px;
           align-items: flex-end;
         }
 
         .chat-input {
           flex: 1;
-          padding: 12px;
+          padding: 12px 16px;
           border: 1px solid var(--color-border);
-          border-radius: 8px;
+          border-radius: 12px;
           background: var(--color-bg);
           color: var(--color-text);
-          font-size: 14px;
+          font-size: 15px;
           resize: none;
           font-family: inherit;
+          transition: border-color 0.2s;
         }
 
         .chat-input:focus {
@@ -1046,16 +1040,23 @@ export default function AiChat() {
           background: var(--color-bg-secondary);
         }
 
+        .input-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
         .btn-send {
-          padding: 12px 16px;
-          border: none;
-          border-radius: 8px;
+          padding: 12px;
           background: var(--color-primary);
           color: white;
+          border: none;
+          border-radius: 12px;
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
+          transition: opacity 0.2s;
         }
 
         .btn-send:disabled {
@@ -1067,25 +1068,239 @@ export default function AiChat() {
           opacity: 0.9;
         }
 
-        .btn-stop {
-          padding: 12px;
-          border: none;
+        /* Markdown 内容样式 */
+        .markdown-content {
+          font-family: inherit;
+          line-height: 1.6;
+          color: var(--color-text);
+        }
+        
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+          margin-top: 1em;
+          margin-bottom: 0.5em;
+          font-weight: 600;
+          line-height: 1.2;
+          color: var(--color-text);
+        }
+        
+        .markdown-content h1 { font-size: 1.8em; }
+        .markdown-content h2 { font-size: 1.6em; }
+        .markdown-content h3 { font-size: 1.4em; }
+        .markdown-content h4 { font-size: 1.2em; }
+        .markdown-content h5 { font-size: 1.1em; }
+        .markdown-content h6 { font-size: 1em; }
+        
+        .markdown-content p {
+          margin: 0.5em 0;
+        }
+        
+        .markdown-content ul,
+        .markdown-content ol {
+          margin: 0.5em 0;
+          padding-left: 1.5em;
+        }
+        
+        .markdown-content li {
+          margin: 0.25em 0;
+        }
+        
+        .markdown-content code {
+          font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+          background-color: var(--color-code-bg);
+          padding: 0.1em 0.4em;
+          border-radius: 3px;
+          font-size: 0.9em;
+        }
+        
+        .markdown-content pre {
+          background-color: var(--color-code-bg);
+          padding: 1em;
           border-radius: 8px;
-          background: var(--color-error);
-          color: white;
-          cursor: pointer;
+          overflow-x: auto;
+          margin: 0.5em 0;
+        }
+        
+        .markdown-content pre code {
+          padding: 0;
+          background-color: transparent;
+        }
+        
+        .markdown-content blockquote {
+          border-left: 4px solid var(--color-primary);
+          padding-left: 1em;
+          margin: 0.5em 0;
+          color: var(--color-text-secondary);
+        }
+        
+        .markdown-content table {
+          border-collapse: collapse;
+          width: 100%;
+          margin: 0.5em 0;
+        }
+        
+        .markdown-content th,
+        .markdown-content td {
+          border: 1px solid var(--color-border);
+          padding: 0.5em;
+          text-align: left;
+        }
+        
+        .markdown-content th {
+          background-color: var(--color-bg-secondary);
+          font-weight: 600;
+        }
+        
+        .markdown-content a {
+          color: var(--color-primary);
+          text-decoration: none;
+        }
+        
+        .markdown-content a:hover {
+          text-decoration: underline;
+        }
+        
+        .markdown-content strong {
+          font-weight: 600;
+        }
+        
+        .markdown-content em {
+          font-style: italic;
+        }
+        
+        .markdown-content hr {
+          border: none;
+          border-top: 1px solid var(--color-border);
+          margin: 1em 0;
+        }
+        
+        /* 代码高亮样式 */
+        .markdown-content .hljs {
+          display: block;
+          overflow-x: auto;
+          padding: 1em;
+          color: var(--color-text);
+          background: var(--color-code-bg);
+        }
+        
+        .markdown-content .hljs-comment,
+        .markdown-content .hljs-quote {
+          color: var(--color-text-secondary);
+          font-style: italic;
+        }
+        
+        .markdown-content .hljs-keyword,
+        .markdown-content .hljs-selector-tag,
+        .markdown-content .hljs-subst {
+          color: var(--color-primary);
+          font-weight: 600;
+        }
+        
+        .markdown-content .hljs-number,
+        .markdown-content .hljs-literal,
+        .markdown-content .hljs-variable,
+        .markdown-content .hljs-template-variable,
+        .markdown-content .hljs-tag .hljs-attr {
+          color: var(--color-warning);
+        }
+        
+        .markdown-content .hljs-string,
+        .markdown-content .hljs-doctag {
+          color: var(--color-success);
+        }
+        
+        .markdown-content .hljs-title,
+        .markdown-content .hljs-section,
+        .markdown-content .hljs-selector-id {
+          color: var(--color-primary);
+          font-weight: 600;
+        }
+        
+        .markdown-content .hljs-type,
+        .markdown-content .hljs-class .hljs-title {
+          color: var(--color-primary);
+        }
+        
+        .markdown-content .hljs-tag {
+          color: var(--color-text);
+        }
+        
+        .markdown-content .hljs-regexp,
+        .markdown-content .hljs-link {
+          color: var(--color-info);
+        }
+        
+        .markdown-content .hljs-symbol,
+        .markdown-content .hljs-bullet {
+          color: var(--color-warning);
+        }
+        
+        .markdown-content .hljs-built_in,
+        .markdown-content .hljs-builtin-name {
+          color: var(--color-info);
+        }
+        
+        .markdown-content .hljs-meta {
+          color: var(--color-primary);
+        }
+        
+        .markdown-content .hljs-deletion {
+          background: var(--color-error-light);
+        }
+        
+        .markdown-content .hljs-addition {
+          background: var(--color-success-light);
+        }
+        
+        .markdown-content .hljs-emphasis {
+          font-style: italic;
+        }
+        
+        .markdown-content .hljs-strong {
+          font-weight: 600;
+        }
+        .selected-files {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+
+        .file-tag {
           display: flex;
           align-items: center;
           gap: 4px;
-          font-size: 14px;
+          padding: 4px 8px;
+          background: var(--color-bg-secondary);
+          border-radius: 4px;
+          font-size: 12px;
         }
 
+        .btn-remove-file {
+          padding: 0;
+          background: transparent;
+          border: none;
+          color: var(--color-text-secondary);
+          cursor: pointer;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .btn-remove-file:hover {
+          color: var(--color-error);
+        }
+
+        /* 底部提示 */
         .tooltips-text {
-          padding: 8px 12px;
+          padding: 8px 16px;
           font-size: 12px;
           color: var(--color-text-secondary);
           text-align: center;
-          border-top: 1px solid var(--color-border);
         }
 
         .spinning {
@@ -1097,6 +1312,6 @@ export default function AiChat() {
           to { transform: rotate(360deg); }
         }
       `}</style>
-    </ToolLayout>
+    </div>
   )
 }
