@@ -81,4 +81,11 @@ export const categories: Category[] = [
     description: '经典小游戏，消遣放松',
     color: '#a855f7',
   },
+  {
+    id: 'ai',
+    name: 'AI 对话',
+    icon: 'Bot',
+    description: 'AI 对话、模型选择、流式输出',
+    color: '#6366f1',
+  },
 ]

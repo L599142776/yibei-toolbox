@@ -58,6 +58,12 @@ export default defineConfig(async () => {
           changeOrigin: true,
           rewrite: (path: string) => path.replace(/^\/phone-api/, '/api/phone-location'),
         },
+        // AI Chat API 代理
+        '/ai-api': {
+          target: 'https://ai.aurod.cn',
+          changeOrigin: true,
+          rewrite: (path: string) => path.replace(/^\/ai-api/, ''),
+        },
       },
     },
     build: {

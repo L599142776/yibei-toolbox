@@ -1364,6 +1364,7 @@ export default function SuperMario() {
             width={800}
             height={640}
             style={{ display: 'block' }}
+            tabIndex={0}
           />
         </div>
         

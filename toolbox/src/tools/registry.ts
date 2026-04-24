@@ -838,6 +838,18 @@ const toolModules: ToolManifest[] = [
     path: '/entertainment/aircraft-battle',
     component: lazy(() => import('./entertainment/AircraftBattle')),
   },
+
+  // ── AI 对话 ──
+  {
+    id: 'ai-chat',
+    name: 'AI 对话',
+    description: '基于太极 API 的 AI 对话工具，支持 GPT 系列模型流式输出',
+    category: 'ai',
+    icon: 'Bot',
+    keywords: ['AI', 'ChatGPT', 'GPT', '对话', 'ai', 'chat', 'gpt'],
+    path: '/ai/chat',
+    component: lazy(() => import('./ai/AiChat')),
+  },
 ]
 
 // ============================================================
