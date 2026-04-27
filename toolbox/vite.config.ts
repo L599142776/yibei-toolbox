@@ -6,6 +6,9 @@ import { resolve } from 'path'
 // 检查是否为 Electron 环境或构建
 const isElectron = process.env.ELECTRON_DEV || process.env.npm_lifecycle_event?.includes('electron')
 
+// 检查是否为 GitHub Pages 环境
+const isGitHubPages = process.env.GITHUB_PAGES === 'true'
+
 export default defineConfig(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const plugins: any[] = [react(), tailwindcss()]
@@ -50,7 +53,8 @@ export default defineConfig(async () => {
 
   return {
     plugins,
-    base: './',
+    // GitHub Pages 使用仓库名作为子路径，本地/Electron 使用相对路径
+    base: isGitHubPages ? '/toolbox/' : './',
     server: {
       proxy: {
         '/phone-api': {
