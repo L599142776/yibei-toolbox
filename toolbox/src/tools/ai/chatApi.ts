@@ -129,7 +129,11 @@ export function groupModelsByTag(models: ModelInfo[]): Map<string, ModelInfo[]> 
     if (!groups.has(tag)) {
       groups.set(tag, [])
     }
-    groups.get(tag)!.push(model)
+    const group = groups.get(tag)!
+    // 去重：避免相同的 model value 出现多次
+    if (!group.some((m) => m.value === model.value)) {
+      group.push(model)
+    }
   })
 
   return groups

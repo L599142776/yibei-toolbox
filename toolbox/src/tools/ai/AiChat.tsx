@@ -722,17 +722,36 @@ export default function AiChat() {
           gap: 4px;
           overflow: hidden;
         }
-
-        .session-name {
-          font-size: 14px;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+        
+        /* 深色模式下选中的会话文字颜色 */
+        .dark .session-item.active .session-name {
+          color: white;
         }
-
+        
+        /* 浅色模式下选中的会话文字颜色 */
+        .light .session-item.active .session-name {
+          color: white;
+        }
+        
         .session-time {
           font-size: 12px;
           color: var(--color-text-secondary);
+        }
+        
+        /* 深色模式下选中的会话时间颜色 */
+        .dark .session-item.active .session-time {
+          color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 浅色模式下选中的会话时间颜色 */
+        .light .session-item.active .session-time {
+          color: rgba(255, 255, 255, 0.8);
+        }
+        
+        /* 浅色模式下选中会话的背景色 */
+        .light .session-item.active {
+          background-color: var(--accent);
+          color: white;
         }
 
         .session-item.active .session-time {

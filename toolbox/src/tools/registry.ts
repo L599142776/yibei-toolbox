@@ -838,6 +838,16 @@ const toolModules: ToolManifest[] = [
     path: '/entertainment/aircraft-battle',
     component: lazy(() => import('./entertainment/AircraftBattle')),
   },
+  {
+    id: 'black-hole',
+    name: '黑洞吞噬',
+    description: '控制黑洞吸引并吞噬物体，避开危险物体，连击获得高分！',
+    category: 'entertainment',
+    icon: 'Circle',
+    keywords: ['黑洞', '吞噬', '游戏', '物理', '引力', 'space', 'gravity'],
+    path: '/entertainment/black-hole',
+    component: lazy(() => import('./entertainment/BlackHole')),
+  },
 
   // ── AI 对话 ──
   {
