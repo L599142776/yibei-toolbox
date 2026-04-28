@@ -34,8 +34,12 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'yarn'
+
+      # 删除 npm 的 lock 文件（如果存在）
+      - name: Remove package-lock.json if exists
+        run: rm -f package-lock.json
 
       # 安装依赖
       - name: Install dependencies
