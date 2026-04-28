@@ -47,7 +47,7 @@ jobs:
 
       # 构建项目（GitHub Pages 模式）
       - name: Build
-        run: npm run build
+        run: yarn build
         env:
           GITHUB_PAGES: true
 

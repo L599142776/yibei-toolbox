@@ -54,7 +54,7 @@ export default defineConfig(async () => {
   return {
     plugins,
     // GitHub Pages 使用仓库名作为子路径，本地/Electron 使用相对路径
-    base: isGitHubPages ? '/toolbox/' : './',
+    base: isGitHubPages ? '/yibei-toolbox/' : './',
     server: {
       proxy: {
         '/phone-api': {
