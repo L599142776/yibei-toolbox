@@ -39,7 +39,7 @@ jobs:
 
       # 安装依赖
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       # 构建项目（GitHub Pages 模式）
       - name: Build
