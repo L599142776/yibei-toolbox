@@ -35,6 +35,67 @@ import {
 } from './chatApi'
 
 export default function AiChat() {
+  // 功能暂未开放
+  return (
+    <div className="ai-chat-unavailable">
+      <div className="unavailable-content">
+        <Bot size={64} className="unavailable-icon" />
+        <h2>AI 对话功能暂未开放</h2>
+        <p>此功能正在完善中，敬请期待后续更新</p>
+        <div className="unavailable-badge">即将推出</div>
+      </div>
+
+      <style>{`
+        .ai-chat-unavailable {
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 24px;
+          background: var(--color-bg-primary);
+        }
+
+        .unavailable-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 16px;
+          max-width: 400px;
+        }
+
+        .unavailable-icon {
+          color: var(--color-primary);
+          opacity: 0.6;
+        }
+
+        .unavailable-content h2 {
+          font-size: 24px;
+          font-weight: 600;
+          color: var(--color-text-primary);
+          margin: 0;
+        }
+
+        .unavailable-content p {
+          font-size: 14px;
+          color: var(--color-text-secondary);
+          margin: 0;
+          line-height: 1.6;
+        }
+
+        .unavailable-badge {
+          padding: 6px 16px;
+          background: var(--color-primary);
+          color: white;
+          border-radius: 20px;
+          font-size: 12px;
+          font-weight: 500;
+          margin-top: 8px;
+        }
+      `}</style>
+    </div>
+  )
+
   // ============================================================
   // 认证
   // ============================================================

@@ -4,10 +4,11 @@
 const API_BASE_URL = '/ai-api'
 const APP_VERSION = '2.16.0'
 
-// 登录信息 - 使用文档默认值
+// 登录信息 - 请用户在界面上输入自己的账号密码
+// 默认使用空值，需要用户在登录界面填写
 const DEFAULT_LOGIN_REQUEST = {
-  account: 'a_lishizhong@163.com',
-  password: 'FF1314..',
+  account: '', // 用户账号，如: example@email.com
+  password: '', // 用户密码
   code: '',
   captcha: '',
   invite: '',
