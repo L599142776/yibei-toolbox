@@ -692,7 +692,7 @@ export default function AiChat() {
         {config?.tooltipsText && (
           <div
             className="tooltips-text"
-            dangerouslySetInnerHTML={{ __html: config.tooltipsText }}
+            dangerouslySetInnerHTML={{ __html: config?.tooltipsText || '' }}
           />
         )}
       </div>
