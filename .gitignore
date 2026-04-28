@@ -26,7 +26,5 @@ release
 *.sln
 *.sw?
 
-package-lock.json
-
 
 .workbuddy/
