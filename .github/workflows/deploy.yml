@@ -50,6 +50,7 @@ jobs:
         run: yarn build
         env:
           GITHUB_PAGES: true
+          VITE_GITHUB_PAGES: 'true'
 
       # 设置 GitHub Pages
       - name: Setup Pages
