@@ -15,8 +15,9 @@ import CursorSettings from './components/CursorSettings'
 import GlobalLoading from './components/GlobalLoading'
 import Home from './pages/Home'
 import Category from './pages/Category'
+import WidgetTitleBar from './components/WidgetTitleBar'
 import { allTools } from './tools/registry'
-import { isElectron } from './utils/platform'
+import { isElectron, isWidget } from './utils/platform'
 import { Toaster } from './components/ui/Toast'
 import './App.css'
 import './components/ui/Dialog.css'
@@ -26,6 +27,35 @@ import './components/ui/Toast.css'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Widget 模式：只渲染工具内容 + widget 标题栏
+  if (isWidget) {
+    return (
+      <ThemeProvider>
+        <FavoritesProvider>
+          <Router>
+            <div className="app electron widget-mode">
+              <WidgetTitleBar />
+              <main className="main widget-main">
+                <Suspense fallback={<GlobalLoading message="加载中..." />}>
+                  <Routes>
+                    {allTools.map((tool) => (
+                      <Route
+                        key={tool.id}
+                        path={tool.path}
+                        element={<tool.component />}
+                      />
+                    ))}
+                  </Routes>
+                </Suspense>
+              </main>
+              <Toaster />
+            </div>
+          </Router>
+        </FavoritesProvider>
+      </ThemeProvider>
+    )
+  }
 
   return (
     <ThemeProvider>

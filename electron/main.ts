@@ -7,6 +7,60 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = join(__filename, '..')
 
 let mainWindow: BrowserWindow | null = null
+const widgetWindows = new Map<string, BrowserWindow>()
+
+function getWidgetUrl(path: string): string {
+  const base = process.env.VITE_DEV_SERVER_URL
+    ? process.env.VITE_DEV_SERVER_URL
+    : `file://${join(__dirname, '../dist/index.html').replace(/\\/g, '/')}`
+  return `${base}?widget=true#${path}`
+}
+
+function createWidgetWindow(toolId: string, toolName: string, path: string) {
+  const existing = widgetWindows.get(toolId)
+  if (existing && !existing.isDestroyed()) {
+    existing.focus()
+    return existing
+  }
+
+  const win = new BrowserWindow({
+    width: 520,
+    height: 640,
+    minWidth: 320,
+    minHeight: 400,
+    title: toolName,
+    icon: join(__dirname, '../public/icon.svg'),
+    webPreferences: {
+      preload: join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+    backgroundColor: '#0a0a0f',
+    frame: false,
+    alwaysOnTop: true,
+    resizable: true,
+    show: false,
+  })
+
+  win.loadURL(getWidgetUrl(path))
+  win.once('ready-to-show', () => win.show())
+
+  // 拦截外部链接
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http:') || url.startsWith('https:')) {
+      shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
+
+  win.on('closed', () => {
+    widgetWindows.delete(toolId)
+  })
+
+  widgetWindows.set(toolId, win)
+  return win
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -28,7 +82,6 @@ function createWindow() {
     trafficLightPosition: { x: 16, y: 16 },
   })
 
-  // 开发环境加载本地 dev server，生产环境加载打包文件
   if (process.env.VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL)
     mainWindow.webContents.openDevTools({ mode: 'detach' })
@@ -36,7 +89,6 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, '../dist/index.html'))
   }
 
-  // 外部链接用系统浏览器打开
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('http:') || url.startsWith('https:')) {
       shell.openExternal(url)
@@ -49,7 +101,6 @@ function createWindow() {
   })
 }
 
-// 窗口控制 IPC 处理程序
 ipcMain.handle('window:minimize', () => {
   mainWindow?.minimize()
 })
@@ -70,6 +121,27 @@ ipcMain.handle('window:isMaximized', () => {
   return mainWindow?.isMaximized() ?? false
 })
 
+ipcMain.handle('widget:create', (_, { toolId, toolName, path }: { toolId: string; toolName: string; path: string }) => {
+  createWidgetWindow(toolId, toolName, path)
+})
+
+ipcMain.handle('widget:close', (_, toolId: string) => {
+  const win = widgetWindows.get(toolId)
+  if (win && !win.isDestroyed()) {
+    win.close()
+    widgetWindows.delete(toolId)
+  }
+})
+
+ipcMain.handle('widget:getToolId', () => {
+  const win = BrowserWindow.getFocusedWindow()
+  if (!win) return null
+  for (const [id, w] of widgetWindows) {
+    if (w === win) return id
+  }
+  return null
+})
+
 app.whenReady().then(createWindow)
 
 app.on('window-all-closed', () => {
@@ -80,7 +152,6 @@ app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow()
 })
 
-// 安全：禁止新窗口导航
 app.on('web-contents-created', (_, contents) => {
   contents.on('will-navigate', (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl)
