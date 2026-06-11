@@ -670,6 +670,16 @@ const toolModules: ToolManifest[] = [
     path: '/image/image-to-ico',
     component: lazy(() => import('./image/ImageToIco')),
   },
+  {
+    id: 'image-converter',
+    name: '图片格式转换',
+    description: 'PNG / JPEG / WebP / BMP 等图片格式互转，支持质量调节',
+    category: 'image',
+    icon: 'Shuffle',
+    keywords: ['图片', '格式', '转换', 'png', 'jpg', 'jpeg', 'webp', 'bmp', 'converter', '互转'],
+    path: '/image/image-converter',
+    component: lazy(() => import('./image/ImageConverter')),
+  },
 
   // ── 前端开发（新增分类） ──
   {
