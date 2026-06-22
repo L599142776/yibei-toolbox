@@ -1,10 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss: http:; frame-src 'none';" />
+    <meta name="theme-color" content="#0a0a0f" />
     <title>艺北工具箱 - 开发者在线工具集</title>
+    <script>
+      (function() {
+        var t = localStorage.getItem('theme') || 'system';
+        var d = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var r = t === 'light' ? 'light' : t === 'dark' ? 'dark' : (d ? 'dark' : 'light');
+        document.documentElement.classList.add(r);
+        document.querySelector('meta[name="theme-color"]').content = r === 'dark' ? '#0a0a0f' : '#fafbfc';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

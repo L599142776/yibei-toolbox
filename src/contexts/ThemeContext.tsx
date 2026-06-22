@@ -36,6 +36,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // 更新 document 的 class
       document.documentElement.classList.remove('light', 'dark')
       document.documentElement.classList.add(resolved)
+
+      // 同步 theme-color meta 标签
+      const meta = document.querySelector('meta[name="theme-color"]')
+      if (meta) meta.setAttribute('content', resolved === 'dark' ? '#0a0a0f' : '#fafbfc')
     }
 
     updateResolvedTheme()

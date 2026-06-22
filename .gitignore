@@ -14,6 +14,9 @@ dist-electron
 release
 *.local
 
+# npm 认证配置（含 auth token，不要提交）
+.npmrc
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

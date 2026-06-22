@@ -359,6 +359,16 @@ const toolModules: ToolManifest[] = [
 
   // ── 常用工具（新增） ──
   {
+    id: 'periodic-table',
+    name: '元素周期表',
+    description: '交互式元素周期表，探索 118 个化学元素的详细信息和趣味知识',
+    category: 'common',
+    icon: 'Atom',
+    keywords: ['元素', '周期表', '化学', 'chemistry', 'periodic', 'table', '原子'],
+    path: '/common/periodic-table',
+    component: lazy(() => import('./common/periodic-table/PeriodicTable')),
+  },
+  {
     id: 'lorem-ipsum',
     name: 'Lorem Ipsum 生成器',
     description: '生成占位文本，支持英文和中文',

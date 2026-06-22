@@ -1,0 +1,265 @@
+/* ─── Bank Card Lookup ─── */
+.tool-section {
+  margin-bottom: 16px;
+}
+
+.tool-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.bank-card-input {
+  font-size: 20px;
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  letter-spacing: 2px;
+  text-align: center;
+  padding: 16px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.bank-card-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1);
+  outline: none;
+}
+
+.bank-card-input::placeholder {
+  font-size: 14px;
+  letter-spacing: normal;
+  color: var(--text-muted);
+}
+
+.luhn-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.luhn-result.valid {
+  background: rgba(82, 196, 26, 0.1);
+  color: #52c41a;
+  border: 1px solid rgba(82, 196, 26, 0.2);
+}
+
+.luhn-result.invalid {
+  background: rgba(255, 77, 79, 0.1);
+  color: #ff4d4f;
+  border: 1px solid rgba(255, 77, 79, 0.2);
+}
+
+.bank-info-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 20px;
+  border-top: 4px solid var(--accent);
+}
+
+.bank-info-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bank-info-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bank-info-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.bank-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.bank-name-en {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.bank-card-brand-badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.bank-info-divider {
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.bank-info-details {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bank-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bank-info-label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.bank-info-value {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.bank-bin {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  background: var(--bg-input);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.copy-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.bin-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.bin-label {
+  color: var(--text-muted);
+}
+
+.bin-value {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  color: var(--text);
+}
+
+.bin-mask {
+  color: var(--text-muted);
+  margin: 0 2px;
+}
+
+.bin-remaining {
+  margin-left: auto;
+  color: var(--text-muted);
+}
+
+.supported-banks {
+  margin-top: 24px;
+}
+
+.supported-banks summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+  padding: 8px 0;
+}
+
+.supported-banks summary:hover {
+  color: var(--text);
+}
+
+.bank-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+}
+
+.bank-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid;
+  border-radius: 20px;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.bank-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-ring,
+  .cursor-trail,
+  .cursor-sparkle-particle {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes gridMove {
+  from { background-position: 0 0; }
+  to { background-position: 50px 50px; }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.2);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.8;
+  }
+}
+
