@@ -777,6 +777,16 @@ const toolModules: ToolManifest[] = [
     component: lazy(() => import('./gis/MapViewer')),
   },
   {
+    id: 'shapefile-explorer',
+    name: 'Shapefile 地图数据浏览器',
+    description: '解析 Shapefile 文件，地图与属性表双向联动浏览',
+    category: 'gis',
+    icon: 'MapPin',
+    keywords: ['shapefile', 'shp', '地图', '属性表', '联动', 'gis', '浏览器'],
+    path: '/gis/shapefile-explorer',
+    component: lazy(() => import('./gis/ShapefileExplorer')),
+  },
+  {
     id: 'area-calculator',
     name: '多边形面积计算',
     description: '绘制或导入多边形，计算面积和周长',

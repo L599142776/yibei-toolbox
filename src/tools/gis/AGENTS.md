@@ -5,10 +5,11 @@
 ## OVERVIEW
 GIS 地图工具集：地图可视化、坐标转换、面积/距离计算、GeoJSON 编辑。
 
-## TOOLS (8个)
+## TOOLS (9个)
 | ID | 名称 | 核心功能 |
 |----|------|---------|
 | `map-viewer` | 地图文件查看器 | Shapefile/GeoJSON/KML 可视化 |
+| `shapefile-explorer` | Shapefile 地图数据浏览器 | 地图+属性表双向联动浏览 |
 | `area-calculator` | 多边形面积计算 | 绘制/导入多边形，计算面积周长 |
 | `distance-calculator` | 距离测量 | 地图选点或坐标输入 |
 | `coordinate-converter` | 坐标系转换 | WGS84/GCJ-02/BD-09/Mercator 互转 |
@@ -20,6 +21,7 @@ GIS 地图工具集：地图可视化、坐标转换、面积/距离计算、Geo
 | File | Purpose |
 |------|---------|
 | `MapViewer.tsx` | 地图容器 + 图层管理 |
+| `ShapefileExplorer.tsx` | 地图+属性表双向联动，可拖拽分屏布局 |
 | `AreaCalculator.tsx` | 面积计算 + WKT 导入 |
 | `CoordinateConverter.tsx` | 坐标系转换 (批量支持) |
 | `CoordinatePicker.tsx` | 坐标拾取，多格式支持 |
@@ -50,6 +52,18 @@ GIS 地图工具集：地图可视化、坐标转换、面积/距离计算、Geo
 ## SHPJS (Shapefile)
 - 支持 `.shp`, `.dbf`, `.prj` 文件打包为 `.zip`
 - 自动解析属性表并显示为信息面板
+
+## ShapefileExplorer 双向联动架构
+
+`ShapefileExplorer.tsx` 实现地图与属性表的双向选择联动：
+
+- **数据源：** `@microti/file-handler` 解析 Shapefile，每行数据含 `GEOMETRY` 字段（GeoJSON geometry JSON 字符串）
+- **GeoJSON 构建：** `JSON.parse(row.GEOMETRY)` 提取几何，合并属性构建 `FeatureCollection`
+- **选中状态：** `selectedIdx`（原始行号）同时驱动地图高亮和表格行高亮
+- **地图 → 表格：** `onEachFeature` 绑定点击事件，设置 `selectedIdx`，表格滚动到对应行
+- **表格 → 地图：** 行号列点击设置 `selectedIdx`，`FitToFeature` 组件定位地图视口
+- **高亮样式：** 通过 `geoLayerRef` 访问 Leaflet 图层，手动 `setStyle` 更新选中要素样式
+- **分屏布局：** CSS Grid + 拖拽分隔条，最小宽度限制 300px/400px
 
 ## ANTI-PATTERNS (GIS)
 - ❌ 不要混用 lng/lat 和 lat/lng 顺序

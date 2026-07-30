@@ -75,10 +75,11 @@ React Context（ThemeContext, FavoritesContext, CursorContext）+ localStorage �
 
 ## GIS 模块
 
-- 依赖：Leaflet + React-Leaflet + Turf.js + shpjs
+- 依赖：Leaflet + React-Leaflet + Turf.js + shpjs + @microti/file-handler
 - 每个工具独立 MapContainer 实例
 - 坐标系约定：WGS84 (EPSG:4326) 为内部标准
 - GeoJSON 使用 RFC 7946，坐标顺序 [lng, lat]
+- ShapefileExplorer 实现地图+属性表双向联动（点击地图高亮表格行，点击表格行定位地图要素）
 - 详细文档见 `src/tools/gis/AGENTS.md`
 
 ## 游戏工具模式
