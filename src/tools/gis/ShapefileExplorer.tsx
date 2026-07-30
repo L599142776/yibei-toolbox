@@ -283,6 +283,20 @@ export default function ShapefileExplorer() {
 
   const totalPages = Math.ceil(sortedData.length / pageSize)
 
+  // ── 当前页对应的 GeoJSON（地图只显示当前分页的数据）──
+
+  const paginatedGeoData = useMemo((): FeatureCollection | null => {
+    if (!geoData || !paginatedData.length) return null
+    const features: Feature[] = []
+    for (const row of paginatedData) {
+      const idx = row._idx as number | undefined
+      if (idx !== undefined && idx < geoData.features.length) {
+        features.push(geoData.features[idx])
+      }
+    }
+    return features.length > 0 ? { type: 'FeatureCollection', features } : null
+  }, [geoData, paginatedData])
+
   // ── 当前选中的 GeoJSON feature（用于高亮和定位）──
 
   const highlightFeature = useMemo((): Feature | null => {
@@ -875,12 +889,14 @@ export default function ShapefileExplorer() {
                 />
                 <MapClickHandler onClick={handleMapClick} />
                 {highlightFeature && <FitToFeature feature={highlightFeature} />}
-                <GeoJSON
-                  key={`geo-${geoData.features.length}`}
-                  data={geoData}
-                  style={geoStyle}
-                  onEachFeature={handleFeatureClick}
-                />
+                {paginatedGeoData && (
+                  <GeoJSON
+                    key={`geo-page-${currentPage}-${pageSize}-${sortField}-${sortDirection}-${filters.length}`}
+                    data={paginatedGeoData}
+                    style={geoStyle}
+                    onEachFeature={handleFeatureClick}
+                  />
+                )}
                 {highlightFeature && (
                   <GeoJSON
                     key={`highlight-${selectedIdx}`}
