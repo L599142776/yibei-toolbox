@@ -72,6 +72,20 @@ function FitToFeature({ feature }: { feature: Feature | null }) {
   return null
 }
 
+// ── 自动缩放到当前页数据范围 ──
+
+function FitToPage({ data }: { data: FeatureCollection | null }) {
+  const map = useMap()
+  useEffect(() => {
+    if (!data || !data.features.length) return
+    try {
+      const layer = L.geoJSON(data)
+      map.fitBounds(layer.getBounds(), { padding: [40, 40] })
+    } catch { /* ignore */ }
+  }, [data, map])
+  return null
+}
+
 // ── 主组件 ──
 
 export default function ShapefileExplorer() {
@@ -888,6 +902,7 @@ export default function ShapefileExplorer() {
                   subdomains={tileSubdomains}
                 />
                 <MapClickHandler onClick={handleMapClick} />
+                <FitToPage data={paginatedGeoData} />
                 {highlightFeature && <FitToFeature feature={highlightFeature} />}
                 {paginatedGeoData && (
                   <GeoJSON
