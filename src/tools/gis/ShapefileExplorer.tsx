@@ -132,6 +132,9 @@ export default function ShapefileExplorer() {
 
   // 行元素引用（用于滚动到选中行）
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map())
+  // 单击/双击区分计时器
+  const clickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastClickRef = useRef<{ rowIdx: number; col: string } | null>(null)
 
   // ── 表头（排除几何字段）──
 
@@ -490,6 +493,33 @@ export default function ShapefileExplorer() {
     window.addEventListener('mouseup', onMouseUp)
   }, [leftWidth])
 
+  // ── 单元格点击（单击联动地图，双击编辑）──
+
+  const handleCellClick = useCallback((rowIdx: number, col: string) => {
+    if (editingCell?.row === rowIdx && editingCell?.col === col) return
+
+    // 双击检测：300ms 内同一单元格再次点击
+    if (
+      clickTimerRef.current &&
+      lastClickRef.current?.rowIdx === rowIdx &&
+      lastClickRef.current?.col === col
+    ) {
+      clearTimeout(clickTimerRef.current)
+      clickTimerRef.current = null
+      lastClickRef.current = null
+      startEdit(rowIdx, col)
+      return
+    }
+
+    // 首次点击：设为选中行，等待可能的第二次点击
+    lastClickRef.current = { rowIdx, col }
+    handleRowClick(rowIdx)
+    clickTimerRef.current = setTimeout(() => {
+      clickTimerRef.current = null
+      lastClickRef.current = null
+    }, 300)
+  }, [editingCell, handleRowClick, startEdit])
+
   // ── 表格列定义 ──
 
   const allSelected = sortedData.length > 0 && selectedRows.size === sortedData.length
@@ -549,14 +579,7 @@ export default function ShapefileExplorer() {
           const isEditing = editingCell?.row === rowIdx && editingCell?.col === h.prop
           return (
             <div
-              onClick={() => {
-                if (isEditing) return
-                // 单击选中行并联动地图
-                handleRowClick(rowIdx)
-              }}
-              onDoubleClick={() => {
-                if (!isEditing) startEdit(rowIdx, h.prop)
-              }}
+              onClick={() => handleCellClick(rowIdx, h.prop)}
               style={{
                 width: '100%',
                 height: '100%',
