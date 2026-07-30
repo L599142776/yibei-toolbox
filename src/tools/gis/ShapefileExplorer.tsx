@@ -107,7 +107,7 @@ export default function ShapefileExplorer() {
   const [pageSize, setPageSize] = useState(100)
 
   // 分隔布局
-  const [leftWidth, setLeftWidth] = useState(0)
+  const [leftWidth, setLeftWidth] = useState(Math.floor(window.innerWidth * 0.45))
   const containerRef = useRef<HTMLDivElement>(null)
   const isDraggingRef = useRef(false)
 
@@ -116,8 +116,7 @@ export default function ShapefileExplorer() {
   const [tileSubdomains, setTileSubdomains] = useState<string[]>(['a', 'b', 'c'])
   const [tileAttribution, setTileAttribution] = useState('')
 
-  // 地图图层引用（用于手动更新样式）
-  const geoLayerRef = useRef<L.GeoJSON | null>(null)
+  // 行元素引用（用于滚动到选中行）
   const rowRefs = useRef<Map<number, HTMLDivElement>>(new Map())
 
   // ── 表头（排除几何字段）──
@@ -126,15 +125,6 @@ export default function ShapefileExplorer() {
     if (!result?.headers) return []
     return result.headers.filter(h => h.prop !== 'GEOMETRY' && h.prop !== 'wkt' && h.prop !== 'wktType')
   }, [result])
-
-  // ── 初始化分隔位置 ──
-
-  useEffect(() => {
-    if (containerRef.current && leftWidth === 0) {
-      const w = containerRef.current.offsetWidth
-      setLeftWidth(Math.floor(w * 0.5))
-    }
-  }, [leftWidth])
 
   // ── 底图配置 ──
 
@@ -179,6 +169,10 @@ export default function ShapefileExplorer() {
         res = await ShapefileParser.parseShapefile(validFiles, options)
       }
       setResult(res)
+      // 设置属性表数据
+      if (res.data?.length) {
+        setTableData(res.data.map(row => ({ ...row })))
+      }
 
       // 构建 GeoJSON FeatureCollection
       if (res.data?.length) {
@@ -289,35 +283,12 @@ export default function ShapefileExplorer() {
 
   const totalPages = Math.ceil(sortedData.length / pageSize)
 
-  // ── 当前选中的 GeoJSON feature ──
+  // ── 当前选中的 GeoJSON feature（用于高亮和定位）──
 
-  const selectedFeature = useMemo(() => {
+  const highlightFeature = useMemo((): Feature | null => {
     if (selectedIdx === null || !geoData) return null
     return geoData.features.find(f => f.properties?._idx === selectedIdx) ?? null
   }, [selectedIdx, geoData])
-
-  // ── 地图高亮更新 ──
-
-  useEffect(() => {
-    const geoLayer = geoLayerRef.current
-    if (!geoLayer) return
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const layers = (geoLayer as any)._layers as Record<string, L.Layer>
-    if (!layers) return
-    for (const key of Object.keys(layers)) {
-      const child = layers[key]
-      if (child instanceof L.Path) {
-        const feature = (child as L.Layer & { feature?: Feature }).feature
-        const idx = feature?.properties?._idx
-        if (idx === selectedIdx) {
-          child.setStyle({ color: HIGHLIGHT_COLOR, weight: 3, fillColor: HIGHLIGHT_COLOR, fillOpacity: 0.5 })
-          child.bringToFront?.()
-        } else {
-          child.setStyle({ color: DEFAULT_COLOR, weight: 2, fillColor: DEFAULT_COLOR, fillOpacity: 0.3 })
-        }
-      }
-    }
-  }, [selectedIdx])
 
   // ── 地图点击 → 取消选中 ──
 
@@ -550,7 +521,14 @@ export default function ShapefileExplorer() {
           const isEditing = editingCell?.row === rowIdx && editingCell?.col === h.prop
           return (
             <div
-              onClick={() => !isEditing && startEdit(rowIdx, h.prop)}
+              onClick={() => {
+                if (isEditing) return
+                // 单击选中行并联动地图
+                handleRowClick(rowIdx)
+              }}
+              onDoubleClick={() => {
+                if (!isEditing) startEdit(rowIdx, h.prop)
+              }}
               style={{
                 width: '100%',
                 height: '100%',
@@ -896,14 +874,20 @@ export default function ShapefileExplorer() {
                   subdomains={tileSubdomains}
                 />
                 <MapClickHandler onClick={handleMapClick} />
-                {selectedFeature && <FitToFeature feature={selectedFeature} />}
+                {highlightFeature && <FitToFeature feature={highlightFeature} />}
                 <GeoJSON
                   key={`geo-${geoData.features.length}`}
                   data={geoData}
                   style={geoStyle}
                   onEachFeature={handleFeatureClick}
-                  ref={(instance) => { geoLayerRef.current = instance as unknown as L.GeoJSON }}
                 />
+                {highlightFeature && (
+                  <GeoJSON
+                    key={`highlight-${selectedIdx}`}
+                    data={highlightFeature}
+                    style={{ color: HIGHLIGHT_COLOR, weight: 3, fillColor: HIGHLIGHT_COLOR, fillOpacity: 0.5 }}
+                  />
+                )}
               </MapContainer>
             </div>
 
