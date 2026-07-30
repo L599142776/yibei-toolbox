@@ -171,7 +171,7 @@ export default function ShapefileExplorer() {
       setResult(res)
       // 设置属性表数据
       if (res.data?.length) {
-        setTableData(res.data.map(row => ({ ...row })))
+        setTableData(res.data.map((row, i) => ({ ...row, _idx: i })))
       }
 
       // 构建 GeoJSON FeatureCollection
