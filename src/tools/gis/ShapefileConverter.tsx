@@ -4,7 +4,7 @@ import type { ShapefileParseResult, ShapefileParserOptions } from '@microti/file
 import ToolLayout from '../../components/ToolLayout'
 import Select from '../../components/ui/Select'
 import DataTable from '../../components/DataTable'
-import { Upload, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Filter, Plus, X, BookOpen, Download } from 'lucide-react'
+import { Upload, FileArchive, Loader2, RotateCcw, CheckSquare, Square, Filter, Plus, X, BookOpen, Download, ArrowUpDown } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from '../../components/ui/Toast'
 
@@ -42,6 +42,9 @@ export default function ShapefileConverter() {
   const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [showRulesPanel, setShowRulesPanel] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  // 排序状态
+  const [sortField, setSortField] = useState('')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   // 分页状态
   const [currentPage, setCurrentPage] = useState(1)
   const [pageSize, setPageSize] = useState(100)
@@ -200,18 +203,38 @@ export default function ShapefileConverter() {
     )
   }, [tableData, filters])
 
+  // 排序数据
+  const sortedData = useMemo(() => {
+    if (!sortField) return filteredData
+    return [...filteredData].sort((a, b) => {
+      const va = a[sortField]
+      const vb = b[sortField]
+      if (va == null && vb == null) return 0
+      if (va == null) return 1
+      if (vb == null) return -1
+      const na = Number(va), nb = Number(vb)
+      let cmp: number
+      if (!isNaN(na) && !isNaN(nb)) {
+        cmp = na - nb
+      } else {
+        cmp = String(va).localeCompare(String(vb), 'zh-CN')
+      }
+      return sortDirection === 'asc' ? cmp : -cmp
+    })
+  }, [filteredData, sortField, sortDirection])
+
   // 分页数据
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * pageSize
-    return filteredData.slice(start, start + pageSize)
-  }, [filteredData, currentPage, pageSize])
+    return sortedData.slice(start, start + pageSize)
+  }, [sortedData, currentPage, pageSize])
 
-  const totalPages = Math.ceil(filteredData.length / pageSize)
+  const totalPages = Math.ceil(sortedData.length / pageSize)
 
   const handleExport = async () => {
     const dataToExport = selectedRows.size > 0
-      ? filteredData.filter((_, i) => selectedRows.has(i))
-      : filteredData
+      ? sortedData.filter((_, i) => selectedRows.has(i))
+      : sortedData
 
     if (!dataToExport.length) return
     try {
@@ -234,6 +257,8 @@ export default function ShapefileConverter() {
     setSelectedRows(new Set())
     setEditingCell(null)
     setFilters([])
+    setSortField('')
+    setSortDirection('asc')
     setShowFilterPanel(false)
     setShowRulesPanel(false)
     setProgress(0)
@@ -245,10 +270,10 @@ export default function ShapefileConverter() {
   }
 
   const toggleSelectAll = () => {
-    if (selectedRows.size === filteredData.length) {
+    if (selectedRows.size === sortedData.length) {
       setSelectedRows(new Set())
     } else {
-      setSelectedRows(new Set(filteredData.map((_, i) => i)))
+      setSelectedRows(new Set(sortedData.map((_, i) => i)))
     }
   }
 
@@ -263,12 +288,12 @@ export default function ShapefileConverter() {
 
   const startEdit = (rowIdx: number, col: string) => {
     setEditingCell({ row: rowIdx, col })
-    setEditValue(String(filteredData[rowIdx][col] ?? ''))
+    setEditValue(String(sortedData[rowIdx][col] ?? ''))
   }
 
   const commitEdit = () => {
     if (!editingCell) return
-    const origIdx = tableData.indexOf(filteredData[editingCell.row])
+    const origIdx = tableData.indexOf(sortedData[editingCell.row])
     if (origIdx === -1) return
     setTableData(prev => {
       const next = [...prev]
@@ -310,9 +335,13 @@ export default function ShapefileConverter() {
     setSelectedRows(new Set())
   }
 
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+  }
 
-  const allSelected = filteredData.length > 0 && selectedRows.size === filteredData.length
-  const someSelected = selectedRows.size > 0 && selectedRows.size < filteredData.length
+
+  const allSelected = sortedData.length > 0 && selectedRows.size === sortedData.length
+  const someSelected = selectedRows.size > 0 && selectedRows.size < sortedData.length
 
   const tableColumns = useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
     return [
@@ -433,6 +462,32 @@ export default function ShapefileConverter() {
             >
               <Filter size={14} /> 筛选 {filters.length > 0 && <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 10, padding: '0 6px', fontSize: 11, lineHeight: '18px' }}>{filters.length}</span>}
             </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <ArrowUpDown size={14} style={{ color: sortField ? 'var(--accent)' : 'var(--text-dim)', flexShrink: 0 }} />
+              <Select
+                value={sortField}
+                onChange={v => {
+                  setSortField(v)
+                  setCurrentPage(1)
+                }}
+                options={[
+                  { value: '', label: '不排序' },
+                  ...headers.map(h => ({ value: h.prop, label: h.label })),
+                ]}
+                width={130}
+                fontSize={13}
+              />
+              {sortField && (
+                <button
+                  className="btn btn-outline"
+                  onClick={toggleSortDirection}
+                  style={{ padding: '4px 8px', fontSize: 12, minWidth: 42 }}
+                  title={sortDirection === 'asc' ? '当前：升序，点击切换为降序' : '当前：降序，点击切换为升序'}
+                >
+                  {sortDirection === 'asc' ? '↑ 升序' : '↓ 降序'}
+                </button>
+              )}
+            </div>
             <button className="btn btn-outline" onClick={handleClear} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <RotateCcw size={14} /> 清除重置
             </button>
@@ -615,6 +670,9 @@ export default function ShapefileConverter() {
                   {filters.length > 0 && (
                     <span style={{ color: 'var(--accent)', marginLeft: 8 }}>· 筛选后 {filteredData.length} 条</span>
                   )}
+                  {sortField && (
+                    <span style={{ color: 'var(--accent)', marginLeft: 8 }}>· 按 {headers.find(h => h.prop === sortField)?.label || sortField} {sortDirection === 'asc' ? '升序' : '降序'}</span>
+                  )}
                   {selectedRows.size > 0 && (
                     <span style={{ color: 'var(--accent)', marginLeft: 8 }}>· 已选 {selectedRows.size} 行</span>
                   )}
@@ -711,7 +769,7 @@ export default function ShapefileConverter() {
                 </button>
               </div>
               <div style={{ fontSize: 13, color: 'var(--text-dim)' }}>
-                共 {filteredData.length} 条
+                共 {sortedData.length} 条
               </div>
             </div>
           )}
