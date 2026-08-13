@@ -544,6 +544,16 @@ const toolModules: ToolManifest[] = [
     path: '/data/sql-formatter',
     component: lazy(() => import('./data/SqlFormatter')),
   },
+  {
+    id: 'mybatis-sql-formatter',
+    name: 'MyBatis SQL 格式化',
+    description: '将 MyBatis / MyBatis-Plus 日志转换为可执行 SQL，自动替换参数并格式化',
+    category: 'data',
+    icon: 'Database',
+    keywords: ['mybatis', 'sql', '格式化', '参数替换', 'plus', '日志', 'preparing', 'parameters'],
+    path: '/data/mybatis-sql-formatter',
+    component: lazy(() => import('./data/MybatisSqlFormatter')),
+  },
 
   // ── 时间日期（新增） ──
   {
