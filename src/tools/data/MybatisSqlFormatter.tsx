@@ -157,7 +157,7 @@ function formatSql(sql: string): string {
   }
 
   // 处理 SET 子句中的逗号分隔 — 每个字段换行并缩进
-  result = result.replace(/\bSET\b\n?(.+?)(?=\bWHERE\b|\bORDER\b|\bGROUP\b|\bLIMIT\b|$)/gis, (match, setBody) => {
+  result = result.replace(/\bSET\b\n?(.+?)(?=\bWHERE\b|\bORDER\b|\bGROUP\b|\bLIMIT\b|$)/gis, (_match, setBody) => {
     const fields = setBody.split(/,\s*(?=\w)/).map((f: string) => f.trim()).filter(Boolean)
     if (fields.length <= 1) return `SET\n  ${setBody.trim()}`
     return `SET\n  ${fields.join(',\n  ')}`
