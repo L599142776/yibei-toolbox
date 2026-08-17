@@ -900,6 +900,36 @@ const toolModules: ToolManifest[] = [
     path: '/media/audio-converter',
     component: lazy(() => import('./media/AudioConverter')),
   },
+  {
+    id: 'video-converter',
+    name: '视频格式转换',
+    description: '将视频转换为 MP4、WebM、AVI、MOV、MKV、GIF 等格式',
+    category: 'media',
+    icon: 'Video',
+    keywords: ['视频', '格式', '转换', 'mp4', 'webm', 'avi', 'mov', 'mkv', 'gif', 'video', 'converter'],
+    path: '/media/video-converter',
+    component: lazy(() => import('./media/VideoConverter')),
+  },
+  {
+    id: 'video-compressor',
+    name: '视频压缩',
+    description: '压缩视频文件大小，支持质量调节和分辨率调整',
+    category: 'media',
+    icon: 'Minimize2',
+    keywords: ['视频', '压缩', 'compress', '质量', '分辨率', '大小'],
+    path: '/media/video-compressor',
+    component: lazy(() => import('./media/VideoCompressor')),
+  },
+  {
+    id: 'video-to-audio',
+    name: '视频提取音频',
+    description: '从视频文件中提取音频，支持 MP3、WAV、AAC、FLAC、OGG 格式',
+    category: 'media',
+    icon: 'Music',
+    keywords: ['视频', '音频', '提取', '分离', 'mp3', 'wav', 'video', 'audio', 'extract'],
+    path: '/media/video-to-audio',
+    component: lazy(() => import('./media/VideoToAudio')),
+  },
 
   // ── AI 对话 ──
   {
