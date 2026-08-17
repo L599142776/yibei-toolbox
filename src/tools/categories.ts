@@ -82,6 +82,13 @@ export const categories: Category[] = [
     color: '#a855f7',
   },
   {
+    id: 'media',
+    name: '音视频工具',
+    icon: 'Music',
+    description: '音频格式转换、音视频处理工具',
+    color: '#e11d48',
+  },
+  {
     id: 'ai',
     name: 'AI 对话',
     icon: 'Bot',

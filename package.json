@@ -20,6 +20,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@mapbox/shp-write": "^0.4.3",
     "@microti/file-handler": "^1.0.3",
     "@tanstack/react-table": "^8.20.0",

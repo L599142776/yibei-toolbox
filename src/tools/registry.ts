@@ -889,6 +889,18 @@ const toolModules: ToolManifest[] = [
     component: lazy(() => import('./entertainment/BlackHole')),
   },
 
+  // ── 音视频工具 ──
+  {
+    id: 'audio-converter',
+    name: '音频格式转换',
+    description: '将音频转换为 MP3、WAV、OGG、FLAC、AAC、M4A 等格式',
+    category: 'media',
+    icon: 'Music',
+    keywords: ['音频', '格式', '转换', 'mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'audio', 'converter'],
+    path: '/media/audio-converter',
+    component: lazy(() => import('./media/AudioConverter')),
+  },
+
   // ── AI 对话 ──
   {
     id: 'ai-chat',
