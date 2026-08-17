@@ -41,7 +41,8 @@ export function useFFmpeg(): UseFFmpegReturn {
           setProgress(Math.min(Math.round(p * 100), 100))
         })
 
-        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+        // 从本地加载 ffmpeg 核心文件
+        const baseURL = `${window.location.origin}/ffmpeg`
         await ffmpeg.load({
           coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
           wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
