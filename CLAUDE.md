@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-艺北工具箱（yibei-toolbox）— 89 个纯前端开发者工具集，支持 Web 浏览器和 Electron 桌面端（Windows/macOS/Linux）。
+艺北工具箱（yibei-toolbox）— 90 个纯前端开发者工具集，支持 Web 浏览器和 Electron 桌面端（Windows/macOS/Linux）。
 技术栈：React 19 + TypeScript 5.9 + Vite 8 + Electron 41 + Tailwind CSS 4
 
 ## 常用命令

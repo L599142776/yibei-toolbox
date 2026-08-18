@@ -409,6 +409,16 @@ const toolModules: ToolManifest[] = [
     component: lazy(() => import('./common/BankCardLookup')),
   },
   {
+    id: 'health-calculator',
+    name: '健康计算器',
+    description: 'BMI、体脂率、基础代谢、理想体重等健康指标计算',
+    category: 'common',
+    icon: 'Activity',
+    keywords: ['BMI', '体脂', '基础代谢', '理想体重', '健康', '减肥', '健身', 'health', 'calculator'],
+    path: '/common/health-calculator',
+    component: lazy(() => import('./common/HealthCalculator')),
+  },
+  {
     id: 'zh-converter',
     name: '简繁转换',
     description: '简体与繁体中文互转，支持常用词组和多音字处理',
