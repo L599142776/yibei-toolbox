@@ -41,10 +41,10 @@ export function useFFmpeg(): UseFFmpegReturn {
           setProgress(Math.min(Math.round(p * 100), 100))
         })
 
-        // 从本地加载 ffmpeg 核心文件（需要处理 GitHub Pages 子路径）
-        const baseEl = document.querySelector('base')
-        const baseHref = baseEl?.getAttribute('href') || '/'
-        const baseURL = `${window.location.origin}${baseHref}ffmpeg`
+        // 从本地加载 ffmpeg 核心文件
+        // import.meta.env.BASE_URL 在 GitHub Pages 为 '/yibei-toolbox/'，本地为 './'
+        const base = import.meta.env.BASE_URL
+        const baseURL = `${base}ffmpeg`
         await ffmpeg.load({
           coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
           wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
