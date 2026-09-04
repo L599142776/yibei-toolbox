@@ -701,6 +701,16 @@ const toolModules: ToolManifest[] = [
     component: lazy(() => import('./image/ImageToIco')),
   },
   {
+    id: 'icon-generator',
+    name: '图标生成器',
+    description: '将 PNG 图片转换为多种图标格式：32×32、128×128、128×128@2x、ICO、ICNS',
+    category: 'image',
+    icon: 'AppWindow',
+    keywords: ['图标', 'icon', 'ico', 'icns', 'png', '32x32', '128x128', '2x', 'macos', 'windows'],
+    path: '/image/icon-generator',
+    component: lazy(() => import('./image/IconGenerator')),
+  },
+  {
     id: 'image-converter',
     name: '图片格式转换',
     description: 'PNG / JPEG / WebP / BMP 等图片格式互转，支持质量调节',
