@@ -195,6 +195,23 @@ export default function JwtDebugger() {
     iat: DEFAULT_IAT
   }, null, 2))
   const [generatedToken, setGeneratedToken] = useState('')
+  const [secretKey, setSecretKey] = useState('your-256-bit-secret')
+
+  async function hmacSign(alg: string, key: string, data: string): Promise<string> {
+    const algMap: Record<string, { name: string; hash: string }> = {
+      HS256: { name: 'HMAC', hash: 'SHA-256' },
+      HS384: { name: 'HMAC', hash: 'SHA-384' },
+      HS512: { name: 'HMAC', hash: 'SHA-512' },
+    }
+    const params = algMap[alg] || algMap.HS256
+    const encoder = new TextEncoder()
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', encoder.encode(key), { name: params.name, hash: params.hash }, false, ['sign']
+    )
+    const signature = await crypto.subtle.sign(params.name, cryptoKey, encoder.encode(data))
+    return btoa(String.fromCharCode(...Array.from(new Uint8Array(signature))))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+  }
 
   const handleTokenChange = useCallback((value: string) => {
     setToken(value)
@@ -238,19 +255,21 @@ export default function JwtDebugger() {
     }
   }
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     try {
       const header = JSON.parse(genHeader)
       const payload = JSON.parse(genPayload)
       const encodedHeader = base64UrlEncode(header)
       const encodedPayload = base64UrlEncode(payload)
-      const newToken = `${encodedHeader}.${encodedPayload}.[signature]`
+      const alg = typeof header.alg === 'string' ? header.alg : 'HS256'
+      const signature = await hmacSign(alg, secretKey, `${encodedHeader}.${encodedPayload}`)
+      const newToken = `${encodedHeader}.${encodedPayload}.${signature}`
       setGeneratedToken(newToken)
       handleTokenChange(newToken)
     } catch {
       // JSON parse error handled by individual handlers
     }
-  }, [genHeader, genPayload, handleTokenChange])
+  }, [genHeader, genPayload, secretKey, handleTokenChange])
 
   const copyToClipboard = async (text: string, part: string) => {
     await navigator.clipboard.writeText(text)
@@ -888,6 +907,18 @@ export default function JwtDebugger() {
 
           {showGenerator && (
             <div className="jwt-generator-body">
+              <div className="jwt-generator-field">
+                <label>Secret Key（签名密钥）</label>
+                <input
+                  type="text"
+                  className="jwt-textarea"
+                  value={secretKey}
+                  onChange={(e) => setSecretKey(e.target.value)}
+                  placeholder="your-256-bit-secret"
+                  style={{ minHeight: 'auto', padding: '10px 14px' }}
+                  spellCheck={false}
+                />
+              </div>
               <div className="jwt-generator-row">
                 <div className="jwt-generator-field">
                   <label>Header (JSON)</label>
